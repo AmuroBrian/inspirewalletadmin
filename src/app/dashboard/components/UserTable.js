@@ -13,6 +13,7 @@ const UserTable = () => {
   const [modalMessage, setModalMessage] = useState("");
   const [deletingUserId, setDeletingUserId] = useState(null);
   const [deletionStatus, setDeletionStatus] = useState("");
+  const [editingUser, setEditingUser] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
@@ -45,10 +46,16 @@ const UserTable = () => {
     }
   };
 
+  const openEditModal = (user) => {
+    setEditingUser(user);
+    setIsModalOpen(true);
+  };
+
   const closeModal = () => {
     setIsModalOpen(false);
     setIsDeleteModalOpen(false);
     setDeletingUserId(null);
+    setEditingUser(null);
   };
 
   const filteredUsers = users.filter(
@@ -85,7 +92,7 @@ const UserTable = () => {
               <td className="border p-2">{user.firstName}</td>
               <td className="border p-2">{user.emailAddress}</td>
               <td className="border p-2">
-                <button className="p-1 text-blue-500">
+                <button className="p-1 text-blue-500" onClick={() => openEditModal(user)}>
                   <PencilSquareIcon className="w-5 h-5 inline" />
                 </button>
                 <button className="p-1 text-red-500" onClick={() => confirmDeleteUser(user.id)}>
@@ -113,6 +120,30 @@ const UserTable = () => {
       {deletionStatus && (
         <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white p-3 rounded shadow-md">
           {deletionStatus}
+        </div>
+      )}
+
+      {isModalOpen && editingUser && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
+            <h3 className="text-lg font-bold mb-4">Edit User</h3>
+            <input type="text" className="w-full p-2 mb-2 border border-gray-300 rounded" value={editingUser.firstName} readOnly />
+            <input type="text" className="w-full p-2 mb-2 border border-gray-300 rounded" value={editingUser.lastName} readOnly />
+            <input type="email" className="w-full p-2 mb-4 border border-gray-300 rounded" value={editingUser.emailAddress} readOnly />
+            <hr className="my-4" />
+            <p className="text-md font-semibold">Financial Details:</p>
+            <p className="text-sm">Agent Wallet Amount: {editingUser.agentWalletAmount || 0}</p>
+            <p className="text-sm">Available Balance: {editingUser.availBalanceAmount || 0}</p>
+            <p className="text-sm">Stock Amount: {editingUser.stockAmount || 0}</p>
+            <p className="text-sm">Time Deposit: {editingUser.timeDepositAmount || 0}</p>
+            <p className="text-sm">USDT Amount: {editingUser.usdtAmount || 0}</p>
+            <p className="text-sm">Wallet Amount: {editingUser.walletAmount || 0}</p>
+            <div className="flex justify-end mt-4">
+              <button className="bg-gray-500 text-white px-4 py-2 rounded mr-2" onClick={closeModal}>
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

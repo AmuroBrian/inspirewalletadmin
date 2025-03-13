@@ -15,7 +15,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import HistoryIcon from "@mui/icons-material/History";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import DescriptionIcon from "@mui/icons-material/Description";
-import FavoriteIcon from "@mui/icons-material/Favorite";
+import ListIcon from '@mui/icons-material/List';
 
 const SideNav = () => {
   const [mounted, setMounted] = useState(false);
@@ -31,7 +31,7 @@ const SideNav = () => {
     { text: "Admin History", icon: <HistoryIcon />, link: "/dashboard/sample" },
     { text: "Transaction List", icon: <ReceiptIcon />, link: "/dashboard/transactionhistory" },
     { text: "Contract List", icon: <DescriptionIcon />, link: "/dashboard/contractlist" },
-    { text: "Service List", icon: <FavoriteIcon />, link: "/dashboard/servicelist" },
+    { text: "Service List", icon: <ListIcon />, link: "/dashboard/servicelist" },
   ];
 
   return (
@@ -51,7 +51,7 @@ const SideNav = () => {
       <Box sx={{ overflow: "auto" }}>
         <List>
           <ListItem>
-            <ListItemText primary="SideNav" sx={{ fontWeight: "bold" }} />
+            <ListItemText primary="" sx={{ fontWeight: "bold" }} />
           </ListItem>
           {menuItems.map((item, index) => (
             <ListItem key={index} disablePadding>

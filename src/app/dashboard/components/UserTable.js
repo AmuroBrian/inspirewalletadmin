@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { db } from "../../../../script/firebaseConfig";
-import { collection, doc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
+import { collection, doc, updateDoc, deleteDoc, onSnapshot, getDocs } from "firebase/firestore";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 const UserTable = () => {
@@ -15,12 +15,33 @@ const UserTable = () => {
   const [deletionStatus, setDeletionStatus] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
-      const usersData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const unsubscribe = onSnapshot(collection(db, "users"), async (snapshot) => {
+      const usersData = await Promise.all(
+        snapshot.docs.map(async (docSnap) => {
+          const userData = { id: docSnap.id, ...docSnap.data() };
+  
+          // Fetch transactions subcollection to get dateCreated
+          const transactionsRef = collection(db, "users", userData.id, "transactions");
+          const transactionsSnapshot = await getDocs(transactionsRef);
+          let dateCreated = "N/A"; // Default value if no transactions exist
+
+  
+          return {
+            ...userData,
+            dateCreated,
+            agent: userData.agent ? "Yes" : "No",
+            investor: userData.investor ? "Yes" : "No",
+            stock: userData.stock ? "Yes" : "No",
+          };
+        })
+      );
+  
       setUsers(usersData);
     });
+  
     return () => unsubscribe();
   }, []);
+  
 
   const toggleField = async (userId, field, value) => {
     await updateDoc(doc(db, "users", userId), { [field]: !value });
@@ -75,6 +96,10 @@ const UserTable = () => {
             <th className="border p-2">Lastname</th>
             <th className="border p-2">Firstname</th>
             <th className="border p-2">Email Address</th>
+            <th className="border p-2">Date Created</th>
+            <th className="border p-2">Agent</th>
+            <th className="border p-2">Investor</th>
+            <th className="border p-2">Stockholder</th>
             <th className="border p-2">Actions</th>
           </tr>
         </thead>
@@ -84,6 +109,10 @@ const UserTable = () => {
               <td className="border p-2">{user.lastName}</td>
               <td className="border p-2">{user.firstName}</td>
               <td className="border p-2">{user.emailAddress}</td>
+              <td className="border p-2">{user.createdAt}</td>
+              <td className="border p-2">{user.agent}</td>
+              <td className="border p-2">{user.investor}</td>
+              <td className="border p-2">{user.stock}</td>
               <td className="border p-2">
                 <button className="p-1 text-blue-500">
                   <PencilSquareIcon className="w-5 h-5 inline" />

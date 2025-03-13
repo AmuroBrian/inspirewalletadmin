@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Drawer,
   List,
@@ -17,12 +18,20 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 
 const SideNav = () => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null; // Prevent SSR rendering
+
   const menuItems = [
-    { text: "Users", icon: <PersonIcon /> },
-    { text: "Admin History", icon: <HistoryIcon /> },
-    { text: "Transaction List", icon: <ReceiptIcon /> },
-    { text: "Contract List", icon: <DescriptionIcon /> },
-    { text: "Service List", icon: <FavoriteIcon /> },
+    { text: "Users", icon: <PersonIcon />, link: "/dashboard/main" },
+    { text: "Admin History", icon: <HistoryIcon />, link: "/dashboard/sample" },
+    { text: "Transaction List", icon: <ReceiptIcon />, link: "/dashboard/transactionhistory" },
+    { text: "Contract List", icon: <DescriptionIcon />, link: "/dashboard/contractlist" },
+    { text: "Service List", icon: <FavoriteIcon />, link: "/dashboard/servicelist" },
   ];
 
   return (
@@ -46,10 +55,12 @@ const SideNav = () => {
           </ListItem>
           {menuItems.map((item, index) => (
             <ListItem key={index} disablePadding>
-              <ListItemButton>
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItemButton>
+              <Link href={item.link} passHref>
+                <ListItemButton component="Link">
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.text} />
+                </ListItemButton>
+              </Link>
             </ListItem>
           ))}
         </List>

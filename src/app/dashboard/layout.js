@@ -1,4 +1,6 @@
 import "./../globals.css";
+import TopNav from "./components/TopNav";
+import SideNav from "./components/SideNav";
 
 export const metadata = {
     title: "Inspire Wallet Admin",
@@ -8,10 +10,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
     return (
         <html lang="en">
-            <body
-                className=""
-            >
-                
+            <body>
+                <SideNav />
+                <TopNav />
                 {children}
             </body>
         </html>

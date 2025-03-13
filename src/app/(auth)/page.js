@@ -66,7 +66,7 @@ export default function AuthForm() {
       }
   
       alert("Logged in successfully!");
-      router.push("/dashboard/main");  // Redirect to dashboard
+      router.push("/main");  // Redirect to dashboard
   
     } catch (err) {
       setError(err.message);

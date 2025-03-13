@@ -27,11 +27,11 @@ const SideNav = () => {
   if (!mounted) return null; // Prevent SSR rendering
 
   const menuItems = [
-    { text: "Users", icon: <PersonIcon />, link: "/dashboard/main" },
-    { text: "Admin History", icon: <HistoryIcon />, link: "/dashboard/sample" },
-    { text: "Transaction List", icon: <ReceiptIcon />, link: "/dashboard/transactionhistory" },
-    { text: "Contract List", icon: <DescriptionIcon />, link: "/dashboard/contractlist" },
-    { text: "Service List", icon: <ListIcon />, link: "/dashboard/servicelist" },
+    { text: "Users", icon: <PersonIcon />, link: "/main" },
+    { text: "Admin History", icon: <HistoryIcon />, link: "/adminhistory" },
+    { text: "Transaction List", icon: <ReceiptIcon />, link: "/transactionhistory" },
+    { text: "Contract List", icon: <DescriptionIcon />, link: "/contractlist" },
+    { text: "Service List", icon: <ListIcon />, link: "/servicelist" },
   ];
 
   return (
@@ -51,7 +51,7 @@ const SideNav = () => {
       <Box sx={{ overflow: "auto" }}>
         <List>
           <ListItem>
-            <ListItemText primary="" sx={{ fontWeight: "bold" }} />
+            <ListItemText primary=" " sx={{ fontWeight: "bold" }} />
           </ListItem>
           {menuItems.map((item, index) => (
             <ListItem key={index} disablePadding>

@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { 
   onAuthStateChanged, 
   createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword 
+  signInWithEmailAndPassword, 
+  signOut
 } from "firebase/auth";
 import { auth, db } from "../../../script/firebaseConfig"; // Import Firestore
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { doc, getDoc, setDoc } from "firebase/firestore"; // Firestore functions
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, addDoc } from "firebase/firestore"; // Firestore functions
 
 export default function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -32,42 +33,48 @@ export default function AuthForm() {
       setFormData({ ...formData, [name]: value });
     }
   };
-  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-  
+
     try {
       if (isSignUp) {
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, password);
         const user = userCredential.user;
         const aid = user.uid;
-  
+
         await setDoc(doc(db, "admin", aid), {
           fullName: formData.fullName,
           email: formData.email,
           userName: formData.userName,
           aid: aid,
         });
+
         alert("Account created successfully!");
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, formData.email, password);
         const user = userCredential.user;
-        console.log("Email: ", user.email);
-        console.log("UID: ", user.uid);
-  
-        // Check if user exists in "admin" collection
-        const userDoc = await getDoc(doc(db, "admin", user.uid));
+        const aid = user.uid;
+
+        const userDoc = await getDoc(doc(db, "admin", aid));
         if (!userDoc.exists()) {
           alert("You are not authorized to log in.");
           return;
         }
+
+        // Log admin login in admin_history
+        const historyRef = collection(db, "admin", aid, "admin_history");
+        await addDoc(historyRef, {
+          loginTime: serverTimestamp(),
+          logoutTime: null,  // Logout time will be updated later
+          fullName: userDoc.data().fullName,
+          email: userDoc.data().email
+        });
+
+        alert("Logged in successfully!");
+        router.push("/main");
       }
-  
-      alert("Logged in successfully!");
-      router.push("/main");  // Redirect to dashboard
-  
     } catch (err) {
       setError(err.message);
     }
@@ -112,7 +119,7 @@ export default function AuthForm() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-6 py-2 bg-gray-700 text-white rounded-lgWWWWW shadow-md hover:bg-gray-600 transition-all"
+            className="px-6 py-2 bg-gray-700 text-white rounded-lg shadow-md hover:bg-gray-600 transition-all"
             onClick={() => setIsSignUp(!isSignUp)}
           >
             {isSignUp ? "Sign In" : "Sign Up"}

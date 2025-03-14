@@ -1,7 +1,10 @@
 import React from 'react'
 
-export const page = () => {
+export default function ServiceList() {
   return (
-    <div>page</div>
+        <div>
+          Service List
+        </div>
   )
 }
+

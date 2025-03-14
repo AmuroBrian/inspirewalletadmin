@@ -15,7 +15,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import HistoryIcon from "@mui/icons-material/History";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import DescriptionIcon from "@mui/icons-material/Description";
-import ListIcon from '@mui/icons-material/List';
+import ListIcon from "@mui/icons-material/List";
 
 const SideNav = () => {
   const [mounted, setMounted] = useState(false);
@@ -55,8 +55,9 @@ const SideNav = () => {
           </ListItem>
           {menuItems.map((item, index) => (
             <ListItem key={index} disablePadding>
-              <Link href={item.link} passHref>
-                <ListItemButton component="Link">
+              {/* Wrap only ListItemButton inside Link without using component="a" */}
+              <Link href={item.link} passHref legacyBehavior>
+                <ListItemButton>
                   <ListItemIcon>{item.icon}</ListItemIcon>
                   <ListItemText primary={item.text} />
                 </ListItemButton>

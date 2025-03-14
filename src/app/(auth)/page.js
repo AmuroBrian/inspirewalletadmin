@@ -63,14 +63,18 @@ export default function AuthForm() {
           return;
         }
 
-        // Log admin login in admin_history
-        const historyRef = collection(db, "admin", aid, "admin_history");
-        await addDoc(historyRef, {
-          loginTime: serverTimestamp(),
-          logoutTime: null,  // Logout time will be updated later
-          fullName: userDoc.data().fullName,
-          email: userDoc.data().email
-        });
+// Log admin login in admin_history
+          const historyRef = collection(db, "admin", aid, "admin_history");
+          const historyDoc = await addDoc(historyRef, {
+            loginTime: serverTimestamp(),
+            logoutTime: null,  // Logout time will be updated later
+            fullName: userDoc.data().fullName,
+            email: userDoc.data().email
+          });
+
+          // Store the history document ID for future logout update
+          const historyId = historyDoc.id;
+          localStorage.setItem("historyId", historyId); // Save it locally for logout tracking
 
         alert("Logged in successfully!");
         router.push("/main");

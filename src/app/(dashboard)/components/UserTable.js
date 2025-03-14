@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { db } from "../../../../script/firebaseConfig";
-import { collection, doc, updateDoc, deleteDoc, onSnapshot, getDocs } from "firebase/firestore";
+import { collection, doc, updateDoc, deleteDoc, onSnapshot, addDoc } from "firebase/firestore";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
-const UserTable = () => {
+const UserTable = ({ adminId }) => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,36 +16,46 @@ const UserTable = () => {
   const [editingUser, setEditingUser] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "users"), async (snapshot) => {
-      const usersData = await Promise.all(
-        snapshot.docs.map(async (docSnap) => {
-          const userData = { id: docSnap.id, ...docSnap.data() };
-  
-          // Fetch transactions subcollection to get dateCreated
-          const transactionsRef = collection(db, "users", userData.id, "transactions");
-          const transactionsSnapshot = await getDocs(transactionsRef);
-          let dateCreated = "N/A"; // Default value if no transactions exist
+    const unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
+      const usersData = snapshot.docs.map((docSnap) => {
+        const userData = { id: docSnap.id, ...docSnap.data() };
 
-  
-          return {
-            ...userData,
-            dateCreated,
-            agent: userData.agent ? "Yes" : "No",
-            investor: userData.investor ? "Yes" : "No",
-            stock: userData.stock ? "Yes" : "No",
-          };
-        })
-      );
-  
+        return {
+          ...userData,
+          agent: userData.agent ? "Yes" : "No",
+          investor: userData.investor ? "Yes" : "No",
+          stock: userData.stock ? "Yes" : "No",
+        };
+      });
+
       setUsers(usersData);
     });
-  
+
     return () => unsubscribe();
   }, []);
-  
 
-  const toggleField = async (userId, field, value) => {
-    await updateDoc(doc(db, "users", userId), { [field]: !value });
+  const updateUserStatus = async (userId, field, newValue) => {
+    try {
+      await updateDoc(doc(db, "users", userId), { [field]: newValue === "Yes" });
+
+      // Log action to admin_history
+      const actionIndex = {
+        agent: "Change Agent Status",
+        investor: "Change Investor Status",
+        stock: "Change Stockholder Status",
+      };
+
+      if (adminId) {
+        await addDoc(collection(db, "admin", adminId, "admin_history"), {
+          action: actionIndex[field],
+          userId,
+          newValue,
+          timestamp: new Date(),
+        });
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+    }
   };
 
   const confirmDeleteUser = (userId) => {
@@ -117,9 +127,36 @@ const UserTable = () => {
               <td className="border p-2">{user.firstName}</td>
               <td className="border p-2">{user.emailAddress}</td>
               <td className="border p-2">{user.createdAt}</td>
-              <td className="border p-2">{user.agent}</td>
-              <td className="border p-2">{user.investor}</td>
-              <td className="border p-2">{user.stock}</td>
+              <td className="border p-2">
+                <select
+                  className="border p-1 rounded"
+                  value={user.agent}
+                  onChange={(e) => updateUserStatus(user.id, "agent", e.target.value)}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td className="border p-2">
+                <select
+                  className="border p-1 rounded"
+                  value={user.investor}
+                  onChange={(e) => updateUserStatus(user.id, "investor", e.target.value)}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td className="border p-2">
+                <select
+                  className="border p-1 rounded"
+                  value={user.stock}
+                  onChange={(e) => updateUserStatus(user.id, "stock", e.target.value)}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
               <td className="border p-2">
                 <button className="p-1 text-blue-500" onClick={() => openEditModal(user)}>
                   <PencilSquareIcon className="w-5 h-5 inline" />
@@ -132,25 +169,6 @@ const UserTable = () => {
           ))}
         </tbody>
       </table>
-
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
-            <h3 className="text-lg font-bold mb-4">Confirm Deletion</h3>
-            <p>{modalMessage}</p>
-            <div className="flex justify-end mt-4">
-              <button className="bg-gray-500 text-white px-4 py-2 rounded mr-2" onClick={closeModal}>Cancel</button>
-              <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={deleteUser}>Delete</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {deletionStatus && (
-        <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white p-3 rounded shadow-md">
-          {deletionStatus}
-        </div>
-      )}
 
       {isModalOpen && editingUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">

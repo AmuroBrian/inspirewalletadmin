@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { db } from "../../../../script/firebaseConfig"; // Ensure the correct Firebase config path
-import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../../../script/firebaseConfig"; // Ensure correct Firebase config path
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 
 const AdminHistoryPage = () => {
   const [history, setHistory] = useState([]);
@@ -14,10 +14,34 @@ const AdminHistoryPage = () => {
         const historyRef = collection(db, "admin", adminId, "admin_history");
         const historySnapshot = await getDocs(historyRef);
 
-        const historyData = historySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const historyData = await Promise.all(
+          historySnapshot.docs.map(async (docSnap) => {
+            const data = docSnap.data();
+
+            // Fetch full names for each action's userId
+            const updatedActions = await Promise.all(
+              (data.actions || []).map(async (action) => {
+                if (action.userId) {
+                  const userRef = doc(db, "users", action.userId); // Adjust path as needed
+                  const userSnap = await getDoc(userRef);
+
+                  if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    action.fullName =
+                      `${userData.firstName || ""} ${
+                        userData.lastName || ""
+                      }`.trim() || "Unknown User";
+                  } else {
+                    action.fullName = "Unknown User";
+                  }
+                }
+                return action;
+              })
+            );
+
+            return { id: docSnap.id, ...data, actions: updatedActions };
+          })
+        );
 
         setHistory(historyData);
       } catch (error) {
@@ -27,6 +51,12 @@ const AdminHistoryPage = () => {
 
     fetchHistory();
   }, []);
+
+  // Function to safely format timestamps
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp || !timestamp.seconds) return "N/A";
+    return new Date(timestamp.seconds * 1000).toLocaleString();
+  };
 
   return (
     <div className="w-[198vh] pl-[17%] mt-4 p-4 bg-white shadow-md rounded-lg">
@@ -47,17 +77,33 @@ const AdminHistoryPage = () => {
               <tr key={item.id} className="text-center">
                 <td className="border p-2">{item.fullName || "N/A"}</td>
                 <td className="border p-2">
-                  {item.loginTime ? new Date(item.loginTime.seconds * 1000).toLocaleString() : "N/A"}
+                  {formatTimestamp(item.loginTime)}
                 </td>
                 <td className="border p-2">
-                  {item.logoutTime ? new Date(item.logoutTime.seconds * 1000).toLocaleString() : "N/A"}
+                  {formatTimestamp(item.logoutTime)}
                 </td>
-                <td className="border p-2">{item.actions || "N/A"}</td>
+                <td className="border p-2 text-left">
+                  {Array.isArray(item.actions) && item.actions.length > 0 ? (
+                    <ul className="list-disc pl-4">
+                      {item.actions.map((action, index) => (
+                        <li key={index}>
+                          {action.description || "Action performed"} (User:{" "}
+                          {action.fullName || "Unknown"}) at{" "}
+                          {formatTimestamp(action.timestamp)}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    "No actions recorded"
+                  )}
+                </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="5" className="border p-2 text-center">No history available</td>
+              <td colSpan="4" className="border p-2 text-center">
+                No history available
+              </td>
             </tr>
           )}
         </tbody>

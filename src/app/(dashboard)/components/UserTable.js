@@ -44,48 +44,83 @@ const UserTable = ({ adminId }) => {
 
   const updateUserStatus = async (userId, field, newValue) => {
     try {
+      // ✅ Retrieve adminId and sessionId from localStorage
+      const storedAdminId = localStorage.getItem("adminId");
+      const storedSessionId = localStorage.getItem("sessionId");
+
+      if (!storedAdminId || !storedSessionId) {
+        console.error("Admin ID or session ID is missing.");
+        return;
+      }
+
+      console.log("Using Admin ID:", storedAdminId);
+      console.log("Using Session ID:", storedSessionId);
+
+      // Update user field in Firestore
       await updateDoc(doc(db, "users", userId), {
         [field]: newValue === "Yes",
       });
 
-    const actionDescriptions = {
-      agent: "Updated agent status",
-      investor: "Updated investor status",
-      stock: "Updated stockholder status",
-    };
+      // Action Mapping
+      const actionMapping = {
+        agent: { actionNumber: 0, description: "Updated Agent Status" },
+        investor: { actionNumber: 1, description: "Updated Investor Status" },
+        stock: { actionNumber: 2, description: "Updated Stockholder Status" },
+      };
 
-      if (adminId && sessionId) {
-        await updateDoc(doc(db, "admin", adminId, "admin_history", sessionId), {
-          actions: arrayUnion({
-            action: `Updated ${field} status`,
-            userId,
-            newValue,
-            timestamp: new Date().toISOString(),
-          }),
-        });
-      }
+      // Create action log object
+      const actionLog = {
+        actionNumber: actionMapping[field].actionNumber,
+        description: actionMapping[field].description,
+        userId,
+        newValue,
+        timestamp: new Date(),
+      };
+
+      // Reference to admin history document
+      const historyRef = doc(
+        db,
+        "admin",
+        storedAdminId,
+        "admin_history",
+        storedSessionId
+      );
+
+      // Append the new action to the actions array
+      await updateDoc(historyRef, {
+        actions: arrayUnion(actionLog),
+      });
+
+      console.log("User status updated and action logged successfully.");
     } catch (error) {
       console.error("Error updating user status:", error);
     }
   };
+
   const confirmDeleteUser = (userId) => {
     setDeletingUserId(userId);
     setModalMessage("Are you sure you want to delete this user?");
     setIsDeleteModalOpen(true);
   };
+  
 
   const deleteUser = async () => {
-    if (deletingUserId) {
-      try {
-        await deleteDoc(doc(db, "users", deletingUserId));
-        setDeletionStatus("User successfully deleted.");
-      } catch (error) {
-        setDeletionStatus("Failed to delete user.");
-      }
-      setIsDeleteModalOpen(false);
-      setTimeout(() => setDeletionStatus(""), 3000);
+    if (!deletingUserId) return; // Ensure a valid ID
+  
+    try {
+      await deleteDoc(doc(db, "users", deletingUserId)); // Firestore deletion
+      setUsers((prevUsers) => prevUsers.filter(user => user.id !== deletingUserId)); // Remove from UI immediately
+      setDeletionStatus("User successfully deleted.");
+      setDeletingUserId(null);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      setDeletionStatus("Failed to delete user.");
     }
+  
+    setIsDeleteModalOpen(false);
+    setTimeout(() => setDeletionStatus(""), 3000);
   };
+  
 
   const openEditModal = (user) => {
     setEditingUser(user);
@@ -180,6 +215,7 @@ const UserTable = ({ adminId }) => {
                 >
                   <PencilSquareIcon className="w-5 h-5 inline" />
                 </button>
+
                 <button
                   className="p-1 text-red-500"
                   onClick={() => confirmDeleteUser(user.id)}

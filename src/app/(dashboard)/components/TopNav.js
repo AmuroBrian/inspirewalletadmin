@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDoc, doc, updateDoc } from "firebase/firestore";
 import { serverTimestamp } from "firebase/firestore"; // Import serverTimestamp
-import { Cog6ToothIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
+import {
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
+} from "@heroicons/react/24/outline";
 import { db } from "../../../../script/firebaseConfig"; // Firebase config
 
 const TopNav = () => {
@@ -45,34 +48,50 @@ const TopNav = () => {
       return;
     }
 
+    const sessionId = localStorage.getItem("sessionId");
+
+    if (!sessionId) {
+      console.warn("No session ID found for logout update.");
+      return;
+    }
+
+    console.log("Retrieved sessionId:", sessionId);
+    console.log(
+      `Attempting to update: admin/${adminId}/admin_history/${sessionId}`
+    );
+
     try {
-      const historyId = localStorage.getItem("historyId");
-      if (!historyId) {
-        console.warn("No history ID found for logout update.");
+      // Reference the admin history document
+      const historyDocRef = doc(
+        db,
+        "admin",
+        adminId,
+        "admin_history",
+        sessionId
+      );
+      const historyDocSnap = await getDoc(historyDocRef);
+
+      if (!historyDocSnap.exists()) {
+        console.error("Error: Admin history document does not exist!");
         return;
       }
 
-      console.log("Updating Firestore with historyId:", historyId);
-
-      // Reference the exact history entry for logout update
-      const historyDocRef = doc(db, "admin", adminId, "admin_history", historyId);
-
+      // Update logout time in Firestore
       await updateDoc(historyDocRef, {
-        logoutTime: serverTimestamp(), // ✅ Use Firestore's serverTimestamp()
+        logoutTime: serverTimestamp(),
       });
 
       console.log("Logout time recorded successfully.");
 
-      // Sign out the user from Firebase Auth
-      await auth.signOut();
+      // ✅ Remove session data (Web App Logout Only)
+      localStorage.removeItem("sessionId");
+      localStorage.removeItem("adminId");
+      setAdminId(null);
 
-      // Clear stored data after logout
-      localStorage.removeItem("historyId");
-
-      // Redirect to the login page
+      // ✅ Redirect to login page
       router.push("/");
     } catch (error) {
-      console.error("Error updating logout time:", error);
+      console.error("Error during logout:", error);
     }
   };
 
@@ -81,7 +100,10 @@ const TopNav = () => {
       <h1 className="text-xl font-semibold ml-64">Admin Dashboard</h1>
 
       <div className="relative">
-        <button onClick={() => setDropdownOpen(!dropdownOpen)} className="p-2 bg-white rounded-full shadow">
+        <button
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          className="p-2 bg-white rounded-full shadow"
+        >
           ⚙️
         </button>
         {dropdownOpen && (
@@ -89,7 +111,10 @@ const TopNav = () => {
             <button className="flex items-center p-2 hover:bg-gray-100 w-full">
               <Cog6ToothIcon className="w-5 h-5 mr-2" /> Settings
             </button>
-            <button onClick={handleRedirect} className="flex items-center p-2 hover:bg-gray-100 w-full">
+            <button
+              onClick={handleRedirect}
+              className="flex items-center p-2 hover:bg-gray-100 w-full"
+            >
               <ArrowRightOnRectangleIcon className="w-5 h-5 mr-2" /> Logout
             </button>
           </div>
@@ -100,8 +125,6 @@ const TopNav = () => {
 };
 
 export default TopNav;
-
-
 
 /*
 "use client";

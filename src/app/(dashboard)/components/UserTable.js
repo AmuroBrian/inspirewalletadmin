@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { db } from "../../../../script/firebaseConfig";
-import { collection, doc, updateDoc, deleteDoc, onSnapshot, addDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  arrayUnion,
+  addDoc,
+} from "firebase/firestore";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 const UserTable = ({ adminId }) => {
@@ -36,28 +44,30 @@ const UserTable = ({ adminId }) => {
 
   const updateUserStatus = async (userId, field, newValue) => {
     try {
-      await updateDoc(doc(db, "users", userId), { [field]: newValue === "Yes" });
+      await updateDoc(doc(db, "users", userId), {
+        [field]: newValue === "Yes",
+      });
 
-      // Log action to admin_history
-      const actionIndex = {
-        agent: "Change Agent Status",
-        investor: "Change Investor Status",
-        stock: "Change Stockholder Status",
-      };
+    const actionDescriptions = {
+      agent: "Updated agent status",
+      investor: "Updated investor status",
+      stock: "Updated stockholder status",
+    };
 
-      if (adminId) {
-        await addDoc(collection(db, "admin", adminId, "admin_history"), {
-          action: actionIndex[field],
-          userId,
-          newValue,
-          timestamp: new Date(),
+      if (adminId && sessionId) {
+        await updateDoc(doc(db, "admin", adminId, "admin_history", sessionId), {
+          actions: arrayUnion({
+            action: `Updated ${field} status`,
+            userId,
+            newValue,
+            timestamp: new Date().toISOString(),
+          }),
         });
       }
     } catch (error) {
-      console.error("Error updating user:", error);
+      console.error("Error updating user status:", error);
     }
   };
-
   const confirmDeleteUser = (userId) => {
     setDeletingUserId(userId);
     setModalMessage("Are you sure you want to delete this user?");
@@ -131,7 +141,9 @@ const UserTable = ({ adminId }) => {
                 <select
                   className="border p-1 rounded"
                   value={user.agent}
-                  onChange={(e) => updateUserStatus(user.id, "agent", e.target.value)}
+                  onChange={(e) =>
+                    updateUserStatus(user.id, "agent", e.target.value)
+                  }
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -141,7 +153,9 @@ const UserTable = ({ adminId }) => {
                 <select
                   className="border p-1 rounded"
                   value={user.investor}
-                  onChange={(e) => updateUserStatus(user.id, "investor", e.target.value)}
+                  onChange={(e) =>
+                    updateUserStatus(user.id, "investor", e.target.value)
+                  }
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -151,17 +165,25 @@ const UserTable = ({ adminId }) => {
                 <select
                   className="border p-1 rounded"
                   value={user.stock}
-                  onChange={(e) => updateUserStatus(user.id, "stock", e.target.value)}
+                  onChange={(e) =>
+                    updateUserStatus(user.id, "stock", e.target.value)
+                  }
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
                 </select>
               </td>
               <td className="border p-2">
-                <button className="p-1 text-blue-500" onClick={() => openEditModal(user)}>
+                <button
+                  className="p-1 text-blue-500"
+                  onClick={() => openEditModal(user)}
+                >
                   <PencilSquareIcon className="w-5 h-5 inline" />
                 </button>
-                <button className="p-1 text-red-500" onClick={() => confirmDeleteUser(user.id)}>
+                <button
+                  className="p-1 text-red-500"
+                  onClick={() => confirmDeleteUser(user.id)}
+                >
                   <TrashIcon className="w-5 h-5 inline" />
                 </button>
               </td>
@@ -174,19 +196,49 @@ const UserTable = ({ adminId }) => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
             <h3 className="text-lg font-bold mb-4">Edit User</h3>
-            <input type="text" className="w-full p-2 mb-2 border border-gray-300 rounded" value={editingUser.firstName} readOnly />
-            <input type="text" className="w-full p-2 mb-2 border border-gray-300 rounded" value={editingUser.lastName} readOnly />
-            <input type="email" className="w-full p-2 mb-4 border border-gray-300 rounded" value={editingUser.emailAddress} readOnly />
+            <input
+              type="text"
+              className="w-full p-2 mb-2 border border-gray-300 rounded"
+              value={editingUser.firstName}
+              readOnly
+            />
+            <input
+              type="text"
+              className="w-full p-2 mb-2 border border-gray-300 rounded"
+              value={editingUser.lastName}
+              readOnly
+            />
+            <input
+              type="email"
+              className="w-full p-2 mb-4 border border-gray-300 rounded"
+              value={editingUser.emailAddress}
+              readOnly
+            />
             <hr className="my-4" />
             <p className="text-md font-semibold">Financial Details:</p>
-            <p className="text-sm">Agent Wallet Amount: {editingUser.agentWalletAmount || 0}</p>
-            <p className="text-sm">Available Balance: {editingUser.availBalanceAmount || 0}</p>
-            <p className="text-sm">Stock Amount: {editingUser.stockAmount || 0}</p>
-            <p className="text-sm">Time Deposit: {editingUser.timeDepositAmount || 0}</p>
-            <p className="text-sm">USDT Amount: {editingUser.usdtAmount || 0}</p>
-            <p className="text-sm">Wallet Amount: {editingUser.walletAmount || 0}</p>
+            <p className="text-sm">
+              Agent Wallet Amount: {editingUser.agentWalletAmount || 0}
+            </p>
+            <p className="text-sm">
+              Available Balance: {editingUser.availBalanceAmount || 0}
+            </p>
+            <p className="text-sm">
+              Stock Amount: {editingUser.stockAmount || 0}
+            </p>
+            <p className="text-sm">
+              Time Deposit: {editingUser.timeDepositAmount || 0}
+            </p>
+            <p className="text-sm">
+              USDT Amount: {editingUser.usdtAmount || 0}
+            </p>
+            <p className="text-sm">
+              Wallet Amount: {editingUser.walletAmount || 0}
+            </p>
             <div className="flex justify-end mt-4">
-              <button className="bg-gray-500 text-white px-4 py-2 rounded mr-2" onClick={closeModal}>
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
+                onClick={closeModal}
+              >
                 Close
               </button>
             </div>

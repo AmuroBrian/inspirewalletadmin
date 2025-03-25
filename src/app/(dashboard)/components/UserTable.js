@@ -47,6 +47,7 @@ const UserTable = ({ adminId }) => {
 
   const updateUserStatus = async (userId, field, newValue) => {
     try {
+
       // ✅ Retrieve adminId and sessionId from localStorage
       const storedAdminId = localStorage.getItem("adminId");
       const storedSessionId = localStorage.getItem("sessionId");
@@ -59,12 +60,10 @@ const UserTable = ({ adminId }) => {
       console.log("Using Admin ID:", storedAdminId);
       console.log("Using Session ID:", storedSessionId);
 
-      // ✅ Update user field in Firestore
       await updateDoc(doc(db, "users", userId), {
         [field]: newValue === "Yes",
       });
 
-      // ✅ Action Mapping
       const actionMapping = {
         agent: { actionNumber: 0, description: "Updated Agent Status" },
         investor: { actionNumber: 1, description: "Updated Investor Status" },
@@ -95,11 +94,28 @@ const UserTable = ({ adminId }) => {
       });
 
       console.log("User status updated and action logged successfully.");
+
+    const actionDescriptions = {
+      agent: "Updated agent status",
+      investor: "Updated investor status",
+      stock: "Updated stockholder status",
+    };
+
+      if (adminId && sessionId) {
+        await updateDoc(doc(db, "admin", adminId, "admin_history", sessionId), {
+          actions: arrayUnion({
+            action: `Updated ${field} status`,
+            userId,
+            newValue,
+            timestamp: new Date().toISOString(),
+          }),
+        });
+      }
+
     } catch (error) {
       console.error("Error updating user status:", error);
     }
   };
-
   const confirmDeleteUser = (userId) => {
     setDeletingUserId(userId);
     setModalMessage("Are you sure you want to delete this user?");

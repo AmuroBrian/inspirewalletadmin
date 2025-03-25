@@ -10,6 +10,7 @@ import {
   onSnapshot,
   arrayUnion,
   addDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
@@ -21,6 +22,7 @@ const UserTable = ({ adminId }) => {
   const [modalMessage, setModalMessage] = useState("");
   const [deletingUserId, setDeletingUserId] = useState(null);
   const [deletionStatus, setDeletionStatus] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
 
   useEffect(() => {
@@ -28,6 +30,7 @@ const UserTable = ({ adminId }) => {
       const usersData = snapshot.docs.map((docSnap) => {
         const userData = { id: docSnap.id, ...docSnap.data() };
 
+        // ✅ Preserve Firestore Timestamp
         return {
           ...userData,
           agent: userData.agent ? "Yes" : "No",
@@ -57,30 +60,26 @@ const UserTable = ({ adminId }) => {
       console.log("Using Admin ID:", storedAdminId);
       console.log("Using Session ID:", storedSessionId);
 
-      // Update user field in Firestore
-
       await updateDoc(doc(db, "users", userId), {
         [field]: newValue === "Yes",
       });
 
-
-      // Action Mapping
       const actionMapping = {
         agent: { actionNumber: 0, description: "Updated Agent Status" },
         investor: { actionNumber: 1, description: "Updated Investor Status" },
         stock: { actionNumber: 2, description: "Updated Stockholder Status" },
       };
 
-      // Create action log object
+      // ✅ Create action log object with Firestore timestamp
       const actionLog = {
         actionNumber: actionMapping[field].actionNumber,
         description: actionMapping[field].description,
         userId,
         newValue,
-        timestamp: new Date(),
+        timestamp: Timestamp.now(), // ✅ Use Firestore's serverTimestamp
       };
 
-      // Reference to admin history document
+      // ✅ Reference to admin history document
       const historyRef = doc(
         db,
         "admin",
@@ -89,13 +88,13 @@ const UserTable = ({ adminId }) => {
         storedSessionId
       );
 
-      // Append the new action to the actions array
+      // ✅ Append the new action to the actions array
       await updateDoc(historyRef, {
         actions: arrayUnion(actionLog),
       });
 
       console.log("User status updated and action logged successfully.");
-=======
+
     const actionDescriptions = {
       agent: "Updated agent status",
       investor: "Updated investor status",
@@ -122,25 +121,25 @@ const UserTable = ({ adminId }) => {
     setModalMessage("Are you sure you want to delete this user?");
     setIsDeleteModalOpen(true);
   };
-  
 
   const deleteUser = async () => {
     if (!deletingUserId) return; // Ensure a valid ID
-  
+
     try {
       await deleteDoc(doc(db, "users", deletingUserId)); // Firestore deletion
-      setUsers((prevUsers) => prevUsers.filter(user => user.id !== deletingUserId)); // Remove from UI immediately
+      setUsers((prevUsers) =>
+        prevUsers.filter((user) => user.id !== deletingUserId)
+      ); // Remove from UI immediately
       setDeletionStatus("User successfully deleted.");
       setDeletingUserId(null);
     } catch (error) {
       console.error("Error deleting user:", error);
       setDeletionStatus("Failed to delete user.");
     }
-  
+
     setIsDeleteModalOpen(false);
     setTimeout(() => setDeletionStatus(""), 3000);
   };
-  
 
   const openEditModal = (user) => {
     setEditingUser(user);
@@ -154,6 +153,28 @@ const UserTable = ({ adminId }) => {
     setEditingUser(null);
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditingUser((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async () => {
+    if (!editingUser) return;
+
+    try {
+      const userRef = doc(db, "users", editingUser.id);
+      await updateDoc(userRef, {
+        firstName: editingUser.firstName,
+        lastName: editingUser.lastName,
+        emailAddress: editingUser.emailAddress,
+      });
+      console.log("User information updated successfully.");
+      closeModal();
+    } catch (error) {
+      console.error("Error updating user information:", error);
+    };
+
+  }
   const filteredUsers = users.filter(
     (user) =>
       user.firstName.toLowerCase().includes(search.toLowerCase()) ||
@@ -190,8 +211,17 @@ const UserTable = ({ adminId }) => {
             <tr key={user.id} className="text-center">
               <td className="border p-2">{user.lastName}</td>
               <td className="border p-2">{user.firstName}</td>
-              <td className="border p-2">{user.emailAddress}</td>
-              <td className="border p-2">{user.createdAt}</td>
+              <td className="border p-2">{user.emailAddress || '"Missing"'}</td>
+              <td className="border p-2">
+                {user.createdAt?.toDate
+                  ? user.createdAt.toDate().toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "N/A"}
+              </td>
+
               <td className="border p-2">
                 <select
                   className="border p-1 rounded"
@@ -290,12 +320,30 @@ const UserTable = ({ adminId }) => {
             <p className="text-sm">
               Wallet Amount: {editingUser.walletAmount || 0}
             </p>
-            <div className="flex justify-end mt-4">
+
+
+            <div className="flex justify-end mt-4 space-x-2">
+              {isEditing ? (
+                <button
+                  className="bg-green-500 text-white px-4 py-2 rounded"
+                  onClick={handleSubmit}
+                >
+                  Submit
+                </button>
+              ) : (
+                <button
+                  className="bg-green-500 text-white px-4 py-2 rounded"
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edit
+                </button>
+              )}
+
               <button
-                className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
+                className="bg-gray-500 text-white px-4 py-2 rounded"
                 onClick={closeModal}
               >
-                Close
+                {isEditing ? "Cancel" : "Close"}
               </button>
             </div>
           </div>

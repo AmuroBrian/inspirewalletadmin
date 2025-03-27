@@ -156,9 +156,8 @@ const UserTable = ({ adminId }) => {
       closeModal();
     } catch (error) {
       console.error("Error updating user information:", error);
-    };
-
-  }
+    }
+  };
   const filteredUsers = users.filter(
     (user) =>
       user.firstName.toLowerCase().includes(search.toLowerCase()) ||
@@ -305,7 +304,6 @@ const UserTable = ({ adminId }) => {
               Wallet Amount: {editingUser.walletAmount || 0}
             </p>
 
-
             <div className="flex justify-end mt-4 space-x-2">
               {isEditing ? (
                 <button
@@ -325,7 +323,14 @@ const UserTable = ({ adminId }) => {
 
               <button
                 className="bg-gray-500 text-white px-4 py-2 rounded"
-                onClick={closeModal}
+                onClick={() => {
+                  if (isEditing) {
+                    setIsEditing(false); // Exit edit mode
+                  } else {
+                    setIsEditing(false); // Reset edit mode
+                    closeModal(); // Close the modal
+                  }
+                }}
               >
                 {isEditing ? "Cancel" : "Close"}
               </button>

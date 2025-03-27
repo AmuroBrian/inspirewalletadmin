@@ -335,6 +335,42 @@ const UserTable = ({ adminId }) => {
                 {isEditing ? "Cancel" : "Close"}
               </button>
             </div>
+
+            <div className="flex justify-end mt-4 space-x-2">
+              {isEditing ? (
+                <button
+                  className="bg-green-500 text-white px-4 py-2 rounded"
+                  onClick={handleSubmit}
+                >
+                  Submit
+                </button>
+              ) : (
+                <button
+                  className="bg-green-500 text-white px-4 py-2 rounded"
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edit
+                </button>
+              )}
+
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded"
+                onClick={() => {
+                  if (isEditing) {
+                    setIsEditing(false); // Exit edit mode
+                  } else {
+                    setIsEditing(false); // Reset edit mode
+                    closeModal(); // Close the modal
+                  }
+                }}
+              >
+                {isEditing ? "Cancel" : "Close"}
+              </button>
+            </div>
+
+
+
+
           </div>
         </div>
       )}

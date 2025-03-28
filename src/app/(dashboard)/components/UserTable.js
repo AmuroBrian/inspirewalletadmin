@@ -145,20 +145,27 @@ const UserTable = ({ adminId }) => {
 
     try {
       await deleteDoc(doc(db, "users", deletingUserId)); // Firestore deletion
+
       setUsers((prevUsers) =>
         prevUsers.filter((user) => user.id !== deletingUserId)
       ); // Remove from UI immediately
+
       setDeletionStatus("User successfully deleted.");
-      setDeletingUserId(null);
+      //setDeletingUserId(null);
     } catch (error) {
       console.error("Error deleting user:", error);
       setDeletionStatus("Failed to delete user.");
-    }
+    } finally {
+      setDeletingUserId(null);
+      setIsDeleteModalOpen(false);
 
-    setIsDeleteModalOpen(false);
-    setTimeout(() => setDeletionStatus(""), 3000);
+      setTimeout(() => setDeletionStatus(""), 3000);
+    }
   };
 
+
+
+  
   const openEditModal = (user) => {
     console.log("Editing User Data:", user); // Check if user data is correct
     setEditingUser(user);
@@ -355,6 +362,34 @@ const UserTable = ({ adminId }) => {
           ))}
         </tbody>
       </table>
+
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <p>{modalMessage}</p>
+            <div className="mt-4 space-x-4">
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded"
+                onClick={deleteUser}
+              >
+                Confirm Delete
+              </button>
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded"
+                onClick={closeModal}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+
+
+
 
       {isModalOpen && editingUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-50 ml-56 mt-16">

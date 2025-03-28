@@ -307,7 +307,11 @@ export default function UserList() {
           <div className="bg-white p-6 rounded-lg shadow-lg w-[50%] relative ml-60">
             <button
               className="absolute top-2 right-2 text-gray-600 text-lg font-bold"
-              onClick={() => setSelectedUser(null)}
+              onClick={() => { setSelectedUser(null);
+                setEditingId(null); // Reset edit mode
+    setEditedTransaction(null); // Reset edited data
+
+              }}
             >
               &times;
             </button>
@@ -356,10 +360,16 @@ export default function UserList() {
                           <td className="p-2 border w-16">
                             <button
                               onClick={saveEdit}
-                              className="text-green-500 hover:text-green-700"
+                              className="p-2 text-green-500 hover:bg-green-100"
                             >
-                              ✅
+                              ✔
                             </button>
+                            <button
+                          onClick={() => setEditingId(null)}
+                          className="p-2 text-red-500 hover:bg-red-100"
+                        >
+                          ✖
+                        </button>
                           </td>
                         </>
                       ) : (
@@ -384,12 +394,12 @@ export default function UserList() {
                           <td className="p-2 border gap-2 justify-center">
                             <button
                               onClick={() => handleEdit(profile)}
-                              className="hover:bg-blue-500"
+                              className="p-2 hover:bg-blue-100"
                             >
                               ✏️
                             </button>
                             <button
-                              className="px-2 py-1 hover:bg-red-600"
+                              className="p-2 hover:bg-red-100"
                               onClick={() => {
                                 if (
                                   window.confirm(
@@ -445,16 +455,16 @@ export default function UserList() {
                       </td>
                       <td className="p-2 border">
                         <button
-                          className="px-2 py-1 hover:bg-green-600 mr-1"
+                          className="p-2 text-red-500 hover:bg-red-100"
                           onClick={saveNewTransaction}
                         >
-                          ✅
+                          ✔
                         </button>
                         <button
-                          className="px-2 py-1 hover:bg-red-600"
+                          className="p-2 text-green-500 hover:bg-green-100"
                           onClick={() => setNewTransaction(null)}
                         >
-                          ❌
+                          ✖
                         </button>
                       </td>
                     </tr>

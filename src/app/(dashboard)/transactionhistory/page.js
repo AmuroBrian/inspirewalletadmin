@@ -296,7 +296,10 @@ export default function TransactionList() {
             </h2>
             <button
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-              onClick={() => setModalType(null)}
+              onClick={() => { setModalType(null);
+                setEditingId(null); // Reset edit mode
+    setEditedTransaction({}); // Clear edited transaction
+              }}
             >
               ✖
             </button>
@@ -355,14 +358,22 @@ export default function TransactionList() {
                           transaction.type
                         )}
                       </td>
-                      <td className="p-2 border gap-3">
+                      <td className="p-2 border gap-5">
                         {editingId === transaction.id ? (
+                          <>
                           <button
                             onClick={saveEdit}
-                            className="text-green-500 hover:text-green-700"
+                            className="p-2 text-green-500 hover:bg-green-100"
                           >
-                            ✅
+                            ✔
                           </button>
+                          <button
+                          onClick={() => setEditingId(null)}
+                          className="p-2 text-red-500 hover:bg-red-100"
+                        >
+                          ✖
+                        </button>
+                      </>
                         ) : (
                           <>
                             <button
@@ -420,16 +431,16 @@ export default function TransactionList() {
                       </td>
                       <td className="p-2 border">
                         <button
-                          className="px-2 py-1 hover:bg-green-600 mr-1"
+                          className="p-2 text-green-500 hover:bg-green-100"
                           onClick={saveNewTransaction}
                         >
-                          ✅
+                          ✔
                         </button>
                         <button
-                          className="px-2 py-1 hover:bg-red-600"
+                          className="p-2 text-red-500 hover:bg-red-100"
                           onClick={() => setNewTransaction(null)}
                         >
-                          ❌
+                          ✖
                         </button>
                       </td>
                     </tr>

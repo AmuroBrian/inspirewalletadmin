@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { db } from "../../../../script/firebaseConfig";
 import {
@@ -24,26 +25,43 @@ const UserTable = ({ adminId }) => {
   const [deletionStatus, setDeletionStatus] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
-      const usersData = snapshot.docs.map((docSnap) => {
-        const userData = { id: docSnap.id, ...docSnap.data() };
-
-        // ✅ Preserve Firestore Timestamp
-        return {
-          ...userData,
-          agent: userData.agent ? "Yes" : "No",
-          investor: userData.investor ? "Yes" : "No",
-          stock: userData.stock ? "Yes" : "No",
-        };
-      });
-
-      setUsers(usersData);
-    });
-
+    const unsubscribe = onSnapshot(
+      collection(db, "users"),
+      (snapshot) => {
+        try {
+          const usersData = snapshot.docs.map((docSnap) => {
+            const userData = { id: docSnap.id, ...docSnap.data() };
+  
+            return {
+              ...userData,
+              agent: userData.agent ? "Yes" : "No",
+              investor: userData.investor ? "Yes" : "No",
+              stock: userData.stock ? "Yes" : "No",
+            };
+          });
+  
+          setUsers(usersData);
+        } catch (error) {
+          console.error("Error fetching users:", error);
+        } finally {
+          // Delay setting loading to false for 5 seconds
+          setTimeout(() => {
+            setLoading(false);
+          }, 3000);
+        }
+      },
+      (error) => {
+        console.error("Error in Firestore snapshot:", error);
+        setLoading(false);
+      }
+    );
+  
     return () => unsubscribe();
   }, []);
+  
 
   const updateUserStatus = async (userId, field, newValue) => {
     try {
@@ -142,43 +160,104 @@ const UserTable = ({ adminId }) => {
   };
 
   const openEditModal = (user) => {
+    console.log("Editing User Data:", user); // Check if user data is correct
     setEditingUser(user);
+    // setIsEditing(true);  // Enable editing
     setIsModalOpen(true);
-  };
+  };  
 
   const closeModal = () => {
     setIsModalOpen(false);
     setIsDeleteModalOpen(false);
     setDeletingUserId(null);
     setEditingUser(null);
+    setIsEditing(false);  // Reset editing state
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditingUser((prev) => ({ ...prev, [name]: value }));
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async () => {
-    if (!editingUser) return;
-
+    if (!editingUser || !editingUser.id) return;
+  
     try {
       const userRef = doc(db, "users", editingUser.id);
       await updateDoc(userRef, {
-        firstName: editingUser.firstName,
-        lastName: editingUser.lastName,
-        emailAddress: editingUser.emailAddress,
+        firstName: editingUser.firstName || "",
+        lastName: editingUser.lastName || "",
+        emailAddress: editingUser.emailAddress || "",
+        agentWalletAmount: Number(editingUser.agentWalletAmount) || 0,
+        availBalanceAmount: Number(editingUser.availBalanceAmount) || 0,
+        stockAmount: Number(editingUser.stockAmount) || 0,
+        timeDepositAmount: Number(editingUser.timeDepositAmount) || 0,
+        usdtAmount: Number(editingUser.usdtAmount) || 0,
+        walletAmount: Number(editingUser.walletAmount) || 0,
       });
+  
       console.log("User information updated successfully.");
-      closeModal();
+  
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === editingUser.id ? { ...user, ...editingUser } : user
+        )
+      );
+  
+      setIsEditing(false);  // Disable editing
+      setEditingUser(null);
     } catch (error) {
       console.error("Error updating user information:", error);
     }
   };
+    
+  
   const filteredUsers = users.filter(
     (user) =>
       user.firstName.toLowerCase().includes(search.toLowerCase()) ||
       user.lastName.toLowerCase().includes(search.toLowerCase())
   );
+
+  // **Loading Screen**
+    if (loading) {
+      return (
+        <div className="flex flex-col justify-center items-center min-h-screen bg-white relative overflow-hidden">
+          <motion.div
+            animate={{ x: ["100%", "-100%"] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="absolute top-1/2 w-full h-1 bg-gradient-to-r from-transparent via-gray-400 to-transparent bg-[length:20px_1px] bg-repeat-x"
+          />
+  
+          <motion.div
+            animate={{
+              y: [0, -50, 0], // Bouncing animation
+              rotate: [0, 360], // Rotating animation
+            }}
+            transition={{
+              duration: 0.6,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="w-20 h-20 rounded-full bg-white shadow-lg flex justify-center items-center overflow-hidden border-2 border-gray-300 ml-10"
+          >
+            <img
+              src="/images/logo.png" // Change this to the actual logo path
+              alt="Logo"
+              className="w-full h-full object-cover"
+            />
+          </motion.div>
+  
+          {/* Surface */}
+          <div className="w-24 h-2 bg-gray-700 rounded-md mt-2 shadow-md relative z-10 ml-10" />
+          <p className="mt-2 text-gray-700 font-semibold text-lg ml-10">
+            Loading...
+          </p>
+        </div>
+      );
+    }
 
   return (
     <div className="w-full mt-4 p-4 bg-white shadow-md rounded-lg">
@@ -278,47 +357,86 @@ const UserTable = ({ adminId }) => {
       </table>
 
       {isModalOpen && editingUser && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
-            <h3 className="text-lg font-bold mb-4">Edit User</h3>
-            <input
-              type="text"
-              className="w-full p-2 mb-2 border border-gray-300 rounded"
-              value={editingUser.firstName}
-              readOnly
-            />
-            <input
-              type="text"
-              className="w-full p-2 mb-2 border border-gray-300 rounded"
-              value={editingUser.lastName}
-              readOnly
-            />
-            <input
-              type="email"
-              className="w-full p-2 mb-4 border border-gray-300 rounded"
-              value={editingUser.emailAddress}
-              readOnly
-            />
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-50 ml-56 mt-16">
+        <div className="bg-white p-6 rounded-lg shadow-lg w-1/2 max-h-[80vh] overflow-auto">
+      
+            <h3 className="text-xl font-bold mb-4">Edit User</h3>
+            
+
+<div className="flex items-center space-x-2">
+  <span className=" text-black">First Name: </span>
+  {isEditing ? (
+    <input
+      type="text"
+      name="firstName"
+      value={editingUser?.firstName || ""}
+      onChange={(e) =>
+        setEditingUser({ ...editingUser, firstName: e.target.value })
+      }
+      className="border rounded-md border-gray-300 w-40"
+    />
+  ) : (
+    <span className=" text-black">{editingUser.firstName}</span>
+  )}
+</div>
+
+<div className="flex items-center space-x-2">
+  <span className=" text-black">Last Name: </span>
+  {isEditing ? (
+    <input
+      type="text"
+      name="lastName"
+      value={editingUser?.lastName || ""}
+      onChange={(e) =>
+        setEditingUser({ ...editingUser, lastName: e.target.value })
+      }
+      className="border rounded-md border-gray-300 w-40"
+    />
+  ) : (
+    <span className=" text-black">{editingUser.lastName}</span>
+  )}
+</div>
+
+<div className="flex items-center space-x-2">
+  <span className="text-black">Email Address:</span>
+  <span className="text-black">{editingUser?.emailAddress || "N/A"}</span>
+</div>
+
             <hr className="my-4" />
             <p className="text-md font-semibold">Financial Details:</p>
-            <p className="text-sm">
-              Agent Wallet Amount: {editingUser.agentWalletAmount || 0}
-            </p>
-            <p className="text-sm">
-              Available Balance: {editingUser.availBalanceAmount || 0}
-            </p>
-            <p className="text-sm">
-              Stock Amount: {editingUser.stockAmount || 0}
-            </p>
-            <p className="text-sm">
-              Time Deposit: {editingUser.timeDepositAmount || 0}
-            </p>
-            <p className="text-sm">
-              USDT Amount: {editingUser.usdtAmount || 0}
-            </p>
-            <p className="text-sm">
-              Wallet Amount: {editingUser.walletAmount || 0}
-            </p>
+            {/* Numeric Fields */}
+           
+            <div className="grid grid-cols-1 gap-4">
+  {[
+    { label: "Agent Wallet Amount", key: "agentWalletAmount" },
+    { label: "Available Balance", key: "availBalanceAmount" },
+    { label: "Stock Amount", key: "stockAmount" },
+    { label: "Time Deposit", key: "timeDepositAmount" },
+    { label: "USDT Amount", key: "usdtAmount" },
+    { label: "Wallet Amount", key: "walletAmount" },
+  ].map(({ label, key }) => (
+    <div key={key} className="grid grid-cols-2 items-center">
+      {/* First column: Label */}
+      <span className="text-sm font-medium text-black">{label}:</span>
+
+      {/* Second column: Value/Input */}
+      {isEditing ? (
+        <input
+          type="number"
+          name={key}
+          value={editingUser[key] || ""}
+          onChange={(e) =>
+            setEditingUser({ ...editingUser, [key]: e.target.value })
+          }
+          className="text-sm border rounded-md p-1 border-gray-300 w-full"
+        />
+      ) : (
+        <span className="text-sm text-black -ml-2">{editingUser[key]}</span>
+      )}
+    </div>
+  ))}
+</div>
+
 
             <div className="flex justify-end mt-4 space-x-2">
               {isEditing ? (
@@ -351,42 +469,6 @@ const UserTable = ({ adminId }) => {
                 {isEditing ? "Cancel" : "Close"}
               </button>
             </div>
-
-            <div className="flex justify-end mt-4 space-x-2">
-              {isEditing ? (
-                <button
-                  className="bg-green-500 text-white px-4 py-2 rounded"
-                  onClick={handleSubmit}
-                >
-                  Submit
-                </button>
-              ) : (
-                <button
-                  className="bg-green-500 text-white px-4 py-2 rounded"
-                  onClick={() => setIsEditing(true)}
-                >
-                  Edit
-                </button>
-              )}
-
-              <button
-                className="bg-gray-500 text-white px-4 py-2 rounded"
-                onClick={() => {
-                  if (isEditing) {
-                    setIsEditing(false); // Exit edit mode
-                  } else {
-                    setIsEditing(false); // Reset edit mode
-                    closeModal(); // Close the modal
-                  }
-                }}
-              >
-                {isEditing ? "Cancel" : "Close"}
-              </button>
-            </div>
-
-
-
-
           </div>
         </div>
       )}

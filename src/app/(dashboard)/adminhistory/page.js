@@ -108,7 +108,7 @@ const AdminHistoryPage = () => {
 
   // Helper function to format timestamps
   const formatTimestamp = (timestamp) => {
-    if (!timestamp || !timestamp.seconds) return "N/A";
+    if (!timestamp || !timestamp.seconds) return "Not Logged out";
     return new Date(timestamp.seconds * 1000).toLocaleString();
   };
 

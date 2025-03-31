@@ -12,6 +12,7 @@ import {
   arrayUnion,
   addDoc,
   Timestamp,
+  Transaction,
 } from "firebase/firestore";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
@@ -84,14 +85,23 @@ const UserTable = ({ adminId }) => {
         agent: { actionNumber: 0, description: "Updated Agent Status" },
         investor: { actionNumber: 1, description: "Updated Investor Status" },
         stock: { actionNumber: 2, description: "Updated Stockholder Status" },
-        lastName: {actionNumber: 3, description: "Updated Lastname"},
-        firstName: {actionNumber: 4, description: "Updated Firstname"},
+        lastName: {actionNumber: 3, description: "Edited Lastname"},
+        firstName: {actionNumber: 4, description: "Edited Firstname"},
         agentWallet: {actionNumber: 5, description: "Updated Agent Wallet Amount"},
         availBalance: {actionNumber: 6, description: "Updated Available Balance"},
         stockAmount: {actionNumber: 7, description: "Updated Stock Amount"},
         timeDeposit: {actionNumber: 8, description: "Updated Time Deposit Amount"},
         usdt: {actionNumber: 9, description: "Updated USDT Amount"},
         wallet: {actionNumber: 10, description: "Updated Wallet Amount"},
+        stockTransAdd: {actionNumber: 11, description: "Added Stock Amount"},
+        stockTransRemove: {actionNumber: 12, description: "Removed Stock Amount"},
+        stockTransEdit: {actionNumber: 13, description: "Edited Stock Amount"},
+        agentTransAdd: {actionNumber: 14, description: "Added Agent Amount"},
+        agentTransRemove: {actionNumber: 15, description: "Removed Agent Amount"},
+        agentTransEdit: {actionNumber: 16, description: "Edited Agent Amount"},
+        transactionTransAdd: {actionNumber: 17, description: "Added Transaction Amount"},
+        transactionTransRemove: {actionNumber: 18, description: "Removed Transaction Amount"},
+        TransactionTransEdit: {actionNumber: 19, description: "Edited Transaction Amount"},
       };
 
       // ✅ Create action log object with Firestore timestamp
@@ -119,11 +129,11 @@ const UserTable = ({ adminId }) => {
 
       console.log("User status updated and action logged successfully.");
 
-      const actionDescriptions = {
-        agent: "Updated agent status",
-        investor: "Updated investor status",
-        stock: "Updated stockholder status",
-      };
+      // const actionDescriptions = {
+      //   agent: "Updated agent status",
+      //   investor: "Updated investor status",
+      //   stock: "Updated stockholder status",
+      // };
 
       if (adminId && sessionId) {
         await updateDoc(doc(db, "admin", adminId, "admin_history", sessionId), {

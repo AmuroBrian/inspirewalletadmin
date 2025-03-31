@@ -455,13 +455,13 @@ export default function UserList() {
                       </td>
                       <td className="p-2 border">
                         <button
-                          className="p-2 text-red-500 hover:bg-red-100"
+                          className="p-2 text-green-500 hover:bg-green-100"
                           onClick={saveNewTransaction}
                         >
                           ✔
                         </button>
                         <button
-                          className="p-2 text-green-500 hover:bg-green-100"
+                          className="p-2 text-red-500 hover:bg-red-100"
                           onClick={() => setNewTransaction(null)}
                         >
                           ✖

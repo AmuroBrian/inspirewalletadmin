@@ -34,7 +34,7 @@ const UserTable = ({ adminId }) => {
         try {
           const usersData = snapshot.docs.map((docSnap) => {
             const userData = { id: docSnap.id, ...docSnap.data() };
-  
+
             return {
               ...userData,
               agent: userData.agent ? "Yes" : "No",
@@ -42,7 +42,7 @@ const UserTable = ({ adminId }) => {
               stock: userData.stock ? "Yes" : "No",
             };
           });
-  
+
           setUsers(usersData);
         } catch (error) {
           console.error("Error fetching users:", error);
@@ -58,14 +58,12 @@ const UserTable = ({ adminId }) => {
         setLoading(false);
       }
     );
-  
+
     return () => unsubscribe();
   }, []);
-  
 
   const updateUserStatus = async (userId, field, newValue) => {
     try {
-
       // ✅ Retrieve adminId and sessionId from localStorage
       const storedAdminId = localStorage.getItem("adminId");
       const storedSessionId = localStorage.getItem("sessionId");
@@ -86,6 +84,14 @@ const UserTable = ({ adminId }) => {
         agent: { actionNumber: 0, description: "Updated Agent Status" },
         investor: { actionNumber: 1, description: "Updated Investor Status" },
         stock: { actionNumber: 2, description: "Updated Stockholder Status" },
+        lastName: {actionNumber: 3, description: "Updated Lastname"},
+        firstName: {actionNumber: 4, description: "Updated Firstname"},
+        agentWallet: {actionNumber: 5, description: "Updated Agent Wallet Amount"},
+        availBalance: {actionNumber: 6, description: "Updated Available Balance"},
+        stockAmount: {actionNumber: 7, description: "Updated Stock Amount"},
+        timeDeposit: {actionNumber: 8, description: "Updated Time Deposit Amount"},
+        usdt: {actionNumber: 9, description: "Updated USDT Amount"},
+        wallet: {actionNumber: 10, description: "Updated Wallet Amount"},
       };
 
       // ✅ Create action log object with Firestore timestamp
@@ -113,11 +119,11 @@ const UserTable = ({ adminId }) => {
 
       console.log("User status updated and action logged successfully.");
 
-    const actionDescriptions = {
-      agent: "Updated agent status",
-      investor: "Updated investor status",
-      stock: "Updated stockholder status",
-    };
+      const actionDescriptions = {
+        agent: "Updated agent status",
+        investor: "Updated investor status",
+        stock: "Updated stockholder status",
+      };
 
       if (adminId && sessionId) {
         await updateDoc(doc(db, "admin", adminId, "admin_history", sessionId), {
@@ -129,7 +135,6 @@ const UserTable = ({ adminId }) => {
           }),
         });
       }
-
     } catch (error) {
       console.error("Error updating user status:", error);
     }
@@ -163,22 +168,19 @@ const UserTable = ({ adminId }) => {
     }
   };
 
-
-
-  
   const openEditModal = (user) => {
     console.log("Editing User Data:", user); // Check if user data is correct
     setEditingUser(user);
     // setIsEditing(true);  // Enable editing
     setIsModalOpen(true);
-  };  
+  };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setIsDeleteModalOpen(false);
     setDeletingUserId(null);
     setEditingUser(null);
-    setIsEditing(false);  // Reset editing state
+    setIsEditing(false); // Reset editing state
   };
 
   const handleInputChange = (e) => {
@@ -191,7 +193,7 @@ const UserTable = ({ adminId }) => {
 
   const handleSubmit = async () => {
     if (!editingUser || !editingUser.id) return;
-  
+
     try {
       const userRef = doc(db, "users", editingUser.id);
       await updateDoc(userRef, {
@@ -205,23 +207,22 @@ const UserTable = ({ adminId }) => {
         usdtAmount: Number(editingUser.usdtAmount) || 0,
         walletAmount: Number(editingUser.walletAmount) || 0,
       });
-  
+
       console.log("User information updated successfully.");
-  
+
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
           user.id === editingUser.id ? { ...user, ...editingUser } : user
         )
       );
-  
-      setIsEditing(false);  // Disable editing
+
+      setIsEditing(false); // Disable editing
       setEditingUser(null);
     } catch (error) {
       console.error("Error updating user information:", error);
     }
   };
-    
-  
+
   const filteredUsers = users.filter(
     (user) =>
       user.firstName.toLowerCase().includes(search.toLowerCase()) ||
@@ -229,42 +230,42 @@ const UserTable = ({ adminId }) => {
   );
 
   // **Loading Screen**
-    if (loading) {
-      return (
-        <div className="flex flex-col justify-center items-center min-h-screen bg-white relative overflow-hidden">
-          <motion.div
-            animate={{ x: ["100%", "-100%"] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="absolute top-1/2 w-full h-1 bg-gradient-to-r from-transparent via-gray-400 to-transparent bg-[length:20px_1px] bg-repeat-x"
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen bg-white relative overflow-hidden">
+        <motion.div
+          animate={{ x: ["100%", "-100%"] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="absolute top-1/2 w-full h-1 bg-gradient-to-r from-transparent via-gray-400 to-transparent bg-[length:20px_1px] bg-repeat-x"
+        />
+
+        <motion.div
+          animate={{
+            y: [0, -50, 0], // Bouncing animation
+            rotate: [0, 360], // Rotating animation
+          }}
+          transition={{
+            duration: 0.6,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="w-20 h-20 rounded-full bg-white shadow-lg flex justify-center items-center overflow-hidden border-2 border-gray-300 ml-10"
+        >
+          <img
+            src="/images/logo.png" // Change this to the actual logo path
+            alt="Logo"
+            className="w-full h-full object-cover"
           />
-  
-          <motion.div
-            animate={{
-              y: [0, -50, 0], // Bouncing animation
-              rotate: [0, 360], // Rotating animation
-            }}
-            transition={{
-              duration: 0.6,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="w-20 h-20 rounded-full bg-white shadow-lg flex justify-center items-center overflow-hidden border-2 border-gray-300 ml-10"
-          >
-            <img
-              src="/images/logo.png" // Change this to the actual logo path
-              alt="Logo"
-              className="w-full h-full object-cover"
-            />
-          </motion.div>
-  
-          {/* Surface */}
-          <div className="w-24 h-2 bg-gray-700 rounded-md mt-2 shadow-md relative z-10 ml-10" />
-          <p className="mt-2 text-gray-700 font-semibold text-lg ml-10">
-            Loading...
-          </p>
-        </div>
-      );
-    }
+        </motion.div>
+
+        {/* Surface */}
+        <div className="w-24 h-2 bg-gray-700 rounded-md mt-2 shadow-md relative z-10 ml-10" />
+        <p className="mt-2 text-gray-700 font-semibold text-lg ml-10">
+          Loading...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full mt-4 p-4 bg-white shadow-md rounded-lg">
@@ -385,93 +386,96 @@ const UserTable = ({ adminId }) => {
         </div>
       )}
 
-
-
-
-
-
-
       {isModalOpen && editingUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-50 ml-56 mt-16">
-        <div className="bg-white p-6 rounded-lg shadow-lg w-1/2 max-h-[80vh] overflow-auto">
-      
+          <div className="bg-white p-6 rounded-lg shadow-lg w-1/2 max-h-[80vh] overflow-auto">
             <h3 className="text-xl font-bold mb-4">Edit User</h3>
-            
 
-<div className="flex items-center space-x-2">
-  <span className=" text-black">First Name: </span>
-  {isEditing ? (
-    <input
-      type="text"
-      name="firstName"
-      value={editingUser?.firstName || ""}
-      onChange={(e) =>
-        setEditingUser({ ...editingUser, firstName: e.target.value })
-      }
-      className="border rounded-md border-gray-300 w-40"
-    />
-  ) : (
-    <span className=" text-black">{editingUser.firstName}</span>
-  )}
-</div>
+            <div className="flex items-center space-x-2">
+              <span className=" text-black">First Name: </span>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="firstName"
+                  value={editingUser?.firstName || ""}
+                  onChange={(e) =>
+                    setEditingUser({
+                      ...editingUser,
+                      firstName: e.target.value,
+                    })
+                  }
+                  className="border rounded-md border-gray-300 w-40"
+                />
+              ) : (
+                <span className=" text-black">{editingUser.firstName}</span>
+              )}
+            </div>
 
-<div className="flex items-center space-x-2">
-  <span className=" text-black">Last Name: </span>
-  {isEditing ? (
-    <input
-      type="text"
-      name="lastName"
-      value={editingUser?.lastName || ""}
-      onChange={(e) =>
-        setEditingUser({ ...editingUser, lastName: e.target.value })
-      }
-      className="border rounded-md border-gray-300 w-40"
-    />
-  ) : (
-    <span className=" text-black">{editingUser.lastName}</span>
-  )}
-</div>
+            <div className="flex items-center space-x-2">
+              <span className=" text-black">Last Name: </span>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="lastName"
+                  value={editingUser?.lastName || ""}
+                  onChange={(e) =>
+                    setEditingUser({ ...editingUser, lastName: e.target.value })
+                  }
+                  className="border rounded-md border-gray-300 w-40"
+                />
+              ) : (
+                <span className=" text-black">{editingUser.lastName}</span>
+              )}
+            </div>
 
-<div className="flex items-center space-x-2">
-  <span className="text-black">Email Address:</span>
-  <span className="text-black">{editingUser?.emailAddress || "N/A"}</span>
-</div>
+            <div className="flex items-center space-x-2">
+              <span className="text-black">Email Address:</span>
+              <span className="text-black">
+                {editingUser?.emailAddress || "N/A"}
+              </span>
+            </div>
 
             <hr className="my-4" />
             <p className="text-md font-semibold">Financial Details:</p>
             {/* Numeric Fields */}
-           
+
             <div className="grid grid-cols-1 gap-4">
-  {[
-    { label: "Agent Wallet Amount", key: "agentWalletAmount" },
-    { label: "Available Balance", key: "availBalanceAmount" },
-    { label: "Stock Amount", key: "stockAmount" },
-    { label: "Time Deposit", key: "timeDepositAmount" },
-    { label: "USDT Amount", key: "usdtAmount" },
-    { label: "Wallet Amount", key: "walletAmount" },
-  ].map(({ label, key }) => (
-    <div key={key} className="grid grid-cols-2 items-center">
-      {/* First column: Label */}
-      <span className="text-sm font-medium text-black">{label}:</span>
+              {[
+                { label: "Agent Wallet Amount", key: "agentWalletAmount" },
+                { label: "Available Balance", key: "availBalanceAmount" },
+                { label: "Stock Amount", key: "stockAmount" },
+                { label: "Time Deposit", key: "timeDepositAmount" },
+                { label: "USDT Amount", key: "usdtAmount" },
+                { label: "Wallet Amount", key: "walletAmount" },
+              ].map(({ label, key }) => (
+                <div key={key} className="grid grid-cols-2 items-center">
+                  {/* First column: Label */}
+                  <span className="text-sm font-medium text-black">
+                    {label}:
+                  </span>
 
-      {/* Second column: Value/Input */}
-      {isEditing ? (
-        <input
-          type="number"
-          name={key}
-          value={editingUser[key] || ""}
-          onChange={(e) =>
-            setEditingUser({ ...editingUser, [key]: e.target.value })
-          }
-          className="text-sm border rounded-md p-1 border-gray-300 w-full"
-        />
-      ) : (
-        <span className="text-sm text-black -ml-2">{editingUser[key]}</span>
-      )}
-    </div>
-  ))}
-</div>
-
+                  {/* Second column: Value/Input */}
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      name={key}
+                      value={editingUser[key] || ""}
+                      onChange={(e) =>
+                        setEditingUser({
+                          ...editingUser,
+                          [key]: e.target.value,
+                        })
+                      }
+                      className="text-sm border rounded-md p-1 border-gray-300 w-full"
+                    />
+                  ) : (
+                    <span className="text-sm text-black -ml-2">
+                      {editingUser[key]}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
 
             <div className="flex justify-end mt-4 space-x-2">
               {isEditing ? (

@@ -1,11 +1,21 @@
 import { db } from "../../../../script/firebaseConfig";
-import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+  addDoc,
+} from "firebase/firestore";
 
 // Fetch Users
 export const fetchUsers = async (setUsers, setLoading) => {
   try {
     const querySnapshot = await getDocs(collection(db, "users"));
-    const usersList = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const usersList = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
     setUsers(usersList);
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -14,19 +24,22 @@ export const fetchUsers = async (setUsers, setLoading) => {
   }
 };
 
-  export const getTransactionsFromFirebase = async (userId, type) => {
-    try {
-      const transactionsRef = firestore.collection("transactions").where("userId", "==", userId);
-      const snapshot = await transactionsRef.get();
-      const transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      return transactions;
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-      return [];
-    }
-  };
-  
-  
+export const getTransactionsFromFirebase = async (userId, type) => {
+  try {
+    const transactionsRef = firestore
+      .collection("transactions")
+      .where("userId", "==", userId);
+    const snapshot = await transactionsRef.get();
+    const transactions = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    return transactions;
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    return [];
+  }
+};
 
 // Add Transaction
 export const saveNewTransaction = async (userId, type, transaction) => {
@@ -47,12 +60,12 @@ export const deleteTransaction = async (userId, type, transactionId) => {
 };
 
 export async function updateTransaction(transactionId, updatedData) {
-    try {
-        const transactionRef = doc(db, "transactions", transactionId);
-        await updateDoc(transactionRef, updatedData);
-        return { success: true };
-    } catch (error) {
-        console.error("Error updating transaction:", error);
-        return { success: false, error };
-    }
-};
+  try {
+    const transactionRef = doc(db, "transactions", transactionId);
+    await updateDoc(transactionRef, updatedData);
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating transaction:", error);
+    return { success: false, error };
+  }
+}

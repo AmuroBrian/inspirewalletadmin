@@ -21,19 +21,24 @@ export default function TransactionModal({
     setEditingId(transaction.id);
     setEditedTransaction({
       amount: transaction.amount || "",
-      date: transaction.date instanceof Date
-        ? transaction.date.toISOString().split("T")[0]
-        : "",
+      date:
+        transaction.date instanceof Date
+          ? transaction.date.toISOString().split("T")[0]
+          : "",
       type: transaction.type || "Unknown",
     });
   };
 
   const saveEdit = () => {
-    if (!editedTransaction.amount || !editedTransaction.date || !editedTransaction.type) {
+    if (
+      !editedTransaction.amount ||
+      !editedTransaction.date ||
+      !editedTransaction.type
+    ) {
       alert("Please fill in all fields before saving.");
       return;
     }
-  
+
     const updatedData = {
       amount: Number(editedTransaction.amount) || 0, // Ensure it's a number
       date: editedTransaction.date
@@ -41,12 +46,12 @@ export default function TransactionModal({
         : Timestamp.now(),
       type: editedTransaction.type || "Unknown",
     };
-  
+
     // Remove any undefined fields before updating
     Object.keys(updatedData).forEach(
       (key) => updatedData[key] === undefined && delete updatedData[key]
     );
-  
+
     updateTransaction(selectedUser, modalType, editingId, updatedData)
       .then(() => {
         console.log("Transaction updated successfully!");
@@ -56,7 +61,6 @@ export default function TransactionModal({
         console.error("Error updating transaction:", error);
       });
   };
-  
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-lg">
@@ -64,7 +68,10 @@ export default function TransactionModal({
         <h2 className="text-xl font-semibold mb-4 text-center capitalize">
           {modalType.replace("Transactions", " Transactions")}
         </h2>
-        <button className="absolute top-3 right-3 text-gray-500 hover:text-gray-700" onClick={closeModal}>
+        <button
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+          onClick={closeModal}
+        >
           ✖
         </button>
 
@@ -78,14 +85,19 @@ export default function TransactionModal({
             </tr>
           </thead>
           <tbody>
-          {(transactions || []).map((transaction) => (
+            {(transactions || []).map((transaction) => (
               <tr key={transaction.id} className="text-center border-b">
                 <td className="border px-4 py-2">
                   {editingId === transaction.id ? (
                     <input
                       type="number"
                       value={editedTransaction.amount}
-                      onChange={(e) => setEditedTransaction({ ...editedTransaction, amount: e.target.value })}
+                      onChange={(e) =>
+                        setEditedTransaction({
+                          ...editedTransaction,
+                          amount: e.target.value,
+                        })
+                      }
                       className="border p-1 w-full"
                     />
                   ) : (
@@ -97,17 +109,22 @@ export default function TransactionModal({
                     <input
                       type="date"
                       value={editedTransaction.date}
-                      onChange={(e) => setEditedTransaction({ ...editedTransaction, date: e.target.value })}
+                      onChange={(e) =>
+                        setEditedTransaction({
+                          ...editedTransaction,
+                          date: e.target.value,
+                        })
+                      }
                       className="border p-1 w-full"
                     />
+                  ) : transaction.date ? (
+                    new Date(transaction.date).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
                   ) : (
-                    transaction.date
-                      ? new Date(transaction.date).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
-                      : "N/A"
+                    "N/A"
                   )}
                 </td>
                 <td className="border px-4 py-2">
@@ -115,7 +132,12 @@ export default function TransactionModal({
                     <input
                       type="text"
                       value={editedTransaction.type}
-                      onChange={(e) => setEditedTransaction({ ...editedTransaction, type: e.target.value })}
+                      onChange={(e) =>
+                        setEditedTransaction({
+                          ...editedTransaction,
+                          type: e.target.value,
+                        })
+                      }
                       className="border p-1 w-full"
                     />
                   ) : (
@@ -124,14 +146,28 @@ export default function TransactionModal({
                 </td>
                 <td className="border px-4 py-2">
                   {editingId === transaction.id ? (
-                    <button onClick={saveEdit} className="text-green-500 hover:text-green-700">✅</button>
+                    <button
+                      onClick={saveEdit}
+                      className="text-green-500 hover:text-green-700"
+                    >
+                      ✅
+                    </button>
                   ) : (
                     <>
-                      <button onClick={() => startEditing(transaction)} className="hover:bg-blue-600">✏️</button>
+                      <button
+                        onClick={() => startEditing(transaction)}
+                        className="hover:bg-blue-600"
+                      >
+                        ✏️
+                      </button>
                       <button
                         className="px-2 py-1 hover:bg-red-600"
                         onClick={() => {
-                          if (window.confirm("Are you sure you want to delete this?")) {
+                          if (
+                            window.confirm(
+                              "Are you sure you want to delete this?"
+                            )
+                          ) {
                             deleteTransaction(transaction.id);
                           }
                         }}
@@ -151,7 +187,12 @@ export default function TransactionModal({
                     type="number"
                     className="border p-1 w-full"
                     value={newTransaction.amount}
-                    onChange={(e) => setNewTransaction({ ...newTransaction, amount: e.target.value })}
+                    onChange={(e) =>
+                      setNewTransaction({
+                        ...newTransaction,
+                        amount: e.target.value,
+                      })
+                    }
                   />
                 </td>
                 <td className="border px-4 py-2">
@@ -159,7 +200,12 @@ export default function TransactionModal({
                     type="date"
                     className="border p-1 w-full"
                     value={newTransaction.date}
-                    onChange={(e) => setNewTransaction({ ...newTransaction, date: e.target.value })}
+                    onChange={(e) =>
+                      setNewTransaction({
+                        ...newTransaction,
+                        date: e.target.value,
+                      })
+                    }
                   />
                 </td>
                 <td className="border px-4 py-2">
@@ -167,14 +213,23 @@ export default function TransactionModal({
                     type="text"
                     className="border p-1 w-full"
                     value={newTransaction.type}
-                    onChange={(e) => setNewTransaction({ ...newTransaction, type: e.target.value })}
+                    onChange={(e) =>
+                      setNewTransaction({
+                        ...newTransaction,
+                        type: e.target.value,
+                      })
+                    }
                   />
                 </td>
                 <td className="border px-4 py-2">
                   <button
                     className="px-2 py-1 hover:bg-green-100 mr-1"
                     onClick={() => {
-                      if (newTransaction.amount && newTransaction.date && newTransaction.type) {
+                      if (
+                        newTransaction.amount &&
+                        newTransaction.date &&
+                        newTransaction.type
+                      ) {
                         saveNewTransaction(newTransaction);
                         setNewTransaction(null);
                       } else {
@@ -184,7 +239,10 @@ export default function TransactionModal({
                   >
                     ✅
                   </button>
-                  <button className="px-2 py-1 hover:bg-red-600" onClick={() => setNewTransaction(null)}>
+                  <button
+                    className="px-2 py-1 hover:bg-red-600"
+                    onClick={() => setNewTransaction(null)}
+                  >
                     ❌
                   </button>
                 </td>

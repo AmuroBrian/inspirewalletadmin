@@ -296,9 +296,10 @@ export default function TransactionList() {
             </h2>
             <button
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-              onClick={() => { setModalType(null);
+              onClick={() => {
+                setModalType(null);
                 setEditingId(null); // Reset edit mode
-    setEditedTransaction({}); // Clear edited transaction
+                setEditedTransaction({}); // Clear edited transaction
               }}
             >
               ✖
@@ -361,19 +362,19 @@ export default function TransactionList() {
                       <td className="p-2 border gap-5">
                         {editingId === transaction.id ? (
                           <>
-                          <button
-                            onClick={saveEdit}
-                            className="p-2 text-green-500 hover:bg-green-100"
-                          >
-                            ✔
-                          </button>
-                          <button
-                          onClick={() => setEditingId(null)}
-                          className="p-2 text-red-500 hover:bg-red-100"
-                        >
-                          ✖
-                        </button>
-                      </>
+                            <button
+                              onClick={saveEdit}
+                              className="p-2 text-green-500 hover:bg-green-100"
+                            >
+                              ✔
+                            </button>
+                            <button
+                              onClick={() => setEditingId(null)}
+                              className="p-2 text-red-500 hover:bg-red-100"
+                            >
+                              ✖
+                            </button>
+                          </>
                         ) : (
                           <>
                             <button

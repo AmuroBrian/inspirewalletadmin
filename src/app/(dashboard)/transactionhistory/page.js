@@ -10,6 +10,9 @@ import {
   updateDoc,
   deleteDoc,
   addDoc,
+  Timestamp,
+  arrayUnion,
+  getDoc
 } from "firebase/firestore";
 
 export default function TransactionList() {
@@ -88,6 +91,8 @@ export default function TransactionList() {
     }));
   };
 
+
+  
   const saveEdit = async () => {
     try {
       const transactionDoc = doc(
@@ -95,27 +100,148 @@ export default function TransactionList() {
         `users/${selectedUser}/${modalType}`,
         editingId
       );
+  
+      // 🔹 Fetch the old transaction data before updating
+      const transactionSnapshot = await getDoc(transactionDoc);
+      if (!transactionSnapshot.exists()) {
+        console.error("Transaction not found!");
+        return;
+      }
+      const oldTransaction = transactionSnapshot.data(); // ✅ Fixed
+  
+      // 🔹 Ensure that the old date is parsed correctly (handle timestamp case)
+      let oldDate = oldTransaction?.date;
+      if (oldDate instanceof Timestamp) {
+        // If it's a Firestore timestamp, convert it to a JavaScript Date object
+        oldDate = oldDate.toDate();
+      } else if (typeof oldDate === "string") {
+        // If it's stored as a string, try to parse it as a date
+        oldDate = new Date(oldDate);
+      }
+  
+      // **Handle invalid old date** (check if oldDate is valid)
+      if (isNaN(oldDate?.getTime())) {
+        oldDate = null; // Set to null if invalid
+      }
+  
+      // **Handle new date**
+      const newDate = new Date(editedTransaction.date);
+  
+      // **Check if the date has changed**
+      const isDateChanged = oldDate && oldDate.getTime() !== newDate.getTime();
+  
+      console.log("Old Date:", oldDate);
+      console.log("New Date:", newDate);
+      console.log("Is Date Changed:", isDateChanged);
+  
+      // 🔹 Update transaction with new values
       await updateDoc(transactionDoc, {
         ...editedTransaction,
-        date: new Date(editedTransaction.date),
+        date: newDate,
       });
-
+  
       setTransactions((prev) =>
         prev.map((trans) =>
           trans.id === editingId
             ? {
                 ...trans,
                 ...editedTransaction,
-                date: new Date(editedTransaction.date),
+                date: newDate,
               }
             : trans
         )
       );
+  
+      // 🔥 Admin History Logging
+      const storedAdminId = localStorage.getItem("adminId");
+      const storedSessionId = localStorage.getItem("sessionId");
+  
+      if (!storedAdminId || !storedSessionId) {
+        console.error("Admin ID or Session ID is missing!");
+        return;
+      }
+  
+      const historyRef = doc(
+        db,
+        "admin",
+        storedAdminId,
+        "admin_history",
+        storedSessionId
+      );
+  
+      // ✅ Determine the type of transaction (stock, agent, transaction)
+      let transactionType = "Transaction"; // Default
+      if (modalType.includes("stock")) {
+        transactionType = "Stock";
+      } else if (modalType.includes("agent")) {
+        transactionType = "Agent";
+      }
+  
+      // ✅ Create logs for each field with old and new values
+      const actionLogs = [];
+  
+      // **Log date changes only if they are valid**
+      if (isDateChanged) {
+        actionLogs.push({
+          actionNumber: 25,
+          userId: selectedUser ?? "Unknown User",
+          description: `Updated ${transactionType} Date from: ${oldDate?.toLocaleDateString() ?? "N/A"} to: ${newDate.toLocaleDateString()}`,
+          oldValue: { date: oldDate?.toLocaleDateString() ?? "N/A" },
+          newValue: { date: newDate.toLocaleDateString() },
+          timestamp: Timestamp.now(),
+        });
+      }
+  
+      // **Log amount changes**
+      if (editedTransaction.amount !== undefined && oldTransaction.amount !== editedTransaction.amount) {
+        actionLogs.push({
+          actionNumber: 24,
+          userId: selectedUser ?? "Unknown User",
+          description: `Updated ${transactionType} Amount: from ₱${oldTransaction?.amount ?? "N/A"} to ₱${editedTransaction.amount}`,
+          oldValue: { amount: oldTransaction?.amount ?? "N/A" },
+          newValue: { amount: editedTransaction.amount },
+          timestamp: Timestamp.now(),
+        });
+      }
+  
+      // **Log type changes**
+      if (
+        editedTransaction.type !== undefined &&
+        oldTransaction.type !== editedTransaction.type
+      ) {
+        actionLogs.push({
+          actionNumber: 26,
+          userId: selectedUser ?? "Unknown User",
+          description: `Updated ${transactionType} Type from: ${oldTransaction?.type ?? "N/A" } to: ${editedTransaction.type}`,
+          oldValue: { type: oldTransaction?.type ?? "N/A" },
+          newValue: { type: editedTransaction.type },
+          timestamp: Timestamp.now(),
+        });
+      }
+  
+      // 🔹 Only save logs if there are changes
+      if (actionLogs.length > 0) {
+        // 🔥 Save logs in Firestore
+        await updateDoc(historyRef, {
+          actions: arrayUnion(...actionLogs),
+        });
+  
+        console.log(
+          `Transaction edited and ${transactionType} logs saved in admin history.`
+        );
+      } else {
+        console.log("No changes detected in amount, date, or type.");
+      }
+  
       setEditingId(null);
     } catch (error) {
       console.error("Error updating transaction:", error);
     }
   };
+  
+  
+
+
 
   const handleDelete = async (transactionId) => {
     try {
@@ -146,27 +272,100 @@ export default function TransactionList() {
       alert("Please fill in all fields");
       return;
     }
-
+  
     try {
       const transactionRef = collection(
         db,
         `users/${selectedUser}/${modalType}`
       );
+  
+      // **Create the new transaction document**
       const docRef = await addDoc(transactionRef, {
         amount: Number(newTransaction.amount),
         date: new Date(newTransaction.date),
         type: newTransaction.type,
       });
-
+  
+      // **Handle logging the new transaction in the admin history**
+      const storedAdminId = localStorage.getItem("adminId");
+      const storedSessionId = localStorage.getItem("sessionId");
+  
+      if (!storedAdminId || !storedSessionId) {
+        console.error("Admin ID or Session ID is missing!");
+        return;
+      }
+  
+      const historyRef = doc(
+        db,
+        "admin",
+        storedAdminId,
+        "admin_history",
+        storedSessionId
+      );
+  
+      // **Determine the type of transaction (stock, agent, transaction)**
+      let transactionType = "Transaction"; // Default
+      if (modalType.includes("stock")) {
+        transactionType = "Stock";
+      } else if (modalType.includes("agent")) {
+        transactionType = "Agent";
+      }
+  
+      // **Create logs for new fields: amount, date, and type**
+      const actionLogs = [];
+  
+      // **Log the new amount**
+      actionLogs.push({
+        actionNumber: 24,
+        userId: selectedUser ?? "Unknown User",
+        description: `Added new ${transactionType} Amount: ₱${newTransaction.amount}`,
+        oldValue: { amount: "N/A" },
+        newValue: { amount: newTransaction.amount },
+        timestamp: Timestamp.now(),
+      });
+  
+      // **Log the new date**
+      const newDate = new Date(newTransaction.date);
+      actionLogs.push({
+        actionNumber: 25,
+        userId: selectedUser ?? "Unknown User",
+        description: `Added new ${transactionType} Date: ${newDate.toLocaleDateString()}`,
+        oldValue: { date: "N/A" },
+        newValue: { date: newDate.toLocaleDateString() },
+        timestamp: Timestamp.now(),
+      });
+  
+      // **Log the new type**
+      actionLogs.push({
+        actionNumber: 26,
+        userId: selectedUser ?? "Unknown User",
+        description: `Added new ${transactionType} Type: ${newTransaction.type}`,
+        oldValue: { type: "N/A" },
+        newValue: { type: newTransaction.type },
+        timestamp: Timestamp.now(),
+      });
+  
+      // **Save the logs in Firestore if there are any actions**
+      if (actionLogs.length > 0) {
+        await updateDoc(historyRef, {
+          actions: arrayUnion(...actionLogs),
+        });
+  
+        console.log(`New ${transactionType} added and logs saved in admin history.`);
+      }
+  
+      // **Update local state with the new transaction**
       setTransactions((prev) => [
         ...prev,
         { id: docRef.id, ...newTransaction },
       ]);
       setNewTransaction(null);
+  
     } catch (error) {
       console.error("Error saving transaction:", error);
     }
   };
+  
 
   const handleAddTransaction = () => {
     setNewTransaction({

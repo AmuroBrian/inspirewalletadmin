@@ -48,7 +48,28 @@ const SideNav = () => {
         },
       }}
     >
-      <Box sx={{ overflow: "auto" }}>
+      <Box sx={{ overflow: "auto", padding: 2, textAlign: "center", marginBottom: "-16%" }}>
+        {/* Box that will hold the logo like an ID photo with a white margin */}
+        <Box
+          sx={{
+            width: 150, // Adjust size of the container
+            height: 150, // Keep it square for ID photo look
+            overflow: "hidden",
+            margin: "0 auto", // Center it
+            backgroundColor: "#fff", // Optional: for background contrast
+          }}
+        >
+          <img
+            src="/images/logo.png" // Replace with the actual logo path
+            alt="Logo"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover", // Ensures the image fills the container without distortion
+            }}
+          />
+        </Box>
+      </Box>
         <List>
           <ListItem>
             <ListItemText primary=" " sx={{ fontWeight: "bold" }} />
@@ -65,7 +86,6 @@ const SideNav = () => {
             </ListItem>
           ))}
         </List>
-      </Box>
     </Drawer>
   );
 };

@@ -12,6 +12,7 @@ import {
   deleteDoc,
   addDoc, // ✅ Add this import
   Timestamp, // ✅ Add this import
+  arrayUnion 
 } from "firebase/firestore";
 
 export default function UserList() {
@@ -97,45 +98,131 @@ export default function UserList() {
     }));
   };
 
+  const updateUserStatus = async (userId, field, newValue) => {
+    try {
+      const storedAdminId = localStorage.getItem("adminId");
+      const storedSessionId = localStorage.getItem("sessionId");
+  
+      if (!storedAdminId || !storedSessionId) {
+        console.error("Admin ID or session ID is missing.");
+        return;
+      }
+  
+      console.log("Using Admin ID:", storedAdminId);
+      console.log("Using Session ID:", storedSessionId);
+  
+      await updateDoc(doc(db, "users", userId), {
+        [field]: newValue === "Yes",
+      });
+  
+      
+  
+      const historyRef = doc(db, "admin", storedAdminId, "admin_history", storedSessionId);
+  
+      // ✅ Append the new action to the `actions` array
+      await updateDoc(historyRef, {
+        actions: arrayUnion(actionLog),
+      });
+  
+      console.log("User status updated and action logged successfully.");
+    } catch (error) {
+      console.error("Error updating user status:", error);
+    }
+  };
+
   const saveEdit = async () => {
     if (!selectedUser || !editingId) return;
 
     try {
-      const transactionDoc = doc(
-        db,
-        `users/${selectedUser.id}/investmentProfiles`,
-        editingId
-      );
+        const transactionDoc = doc(db, `users/${selectedUser.id}/investmentProfiles`, editingId);
+        const transactionSnap = await getDoc(transactionDoc);
 
-      await updateDoc(transactionDoc, {
-        amount: Number(editedTransaction.amount), // Ensure number
-        interestRate: Number(editedTransaction.interestRate), // Ensure number
-        dateOfMaturity: Timestamp.fromDate(new Date(editedTransaction.date)), // Convert to Firestore Timestamp
-      });
+        if (!transactionSnap.exists()) {
+            console.error("Transaction not found!");
+            return;
+        }
 
-      // Update local state
-      setInvestmentProfile((prev) =>
-        prev.map((trans) =>
-          trans.id === editingId
-            ? {
-                ...trans,
-                amount: Number(editedTransaction.amount), // Ensure number
-                interestRate: Number(editedTransaction.interestRate), // Ensure number
-                dateOfMaturity: {
-                  seconds: Math.floor(
-                    new Date(editedTransaction.date).getTime() / 1000
-                  ),
-                },
-              }
-            : trans
-        )
-      );
+        const oldData = transactionSnap.data();
+        const newData = {
+            amount: Number(editedTransaction.amount),
+            interestRate: Number(editedTransaction.interestRate),
+            dateOfMaturity: Timestamp.fromDate(new Date(editedTransaction.date)),
+        };
 
-      setEditingId(null);
+        await updateDoc(transactionDoc, newData);
+
+        setInvestmentProfile((prev) =>
+            prev.map((trans) => (trans.id === editingId ? { ...trans, ...newData } : trans))
+        );
+
+        const storedAdminId = localStorage.getItem("adminId");
+        const storedSessionId = localStorage.getItem("sessionId");
+        const adminName = localStorage.getItem("adminName"); // Assuming admin name is stored
+
+        if (!storedAdminId || !storedSessionId) {
+            console.error("Admin ID or Session ID is missing!");
+            return;
+        }
+
+        const historyRef = doc(db, "admin", storedAdminId, "admin_history", storedSessionId);
+
+        let actions = [];
+
+if (oldData.amount !== newData.amount) {
+  
+    actions.push({
+        actionNumber: "20",
+        userId: selectedUser.id,
+        description: `Updated Contract Amount: from ${oldData.amount} to ${newData.amount}`,
+        oldValue: oldData.amount,
+        newValue: newData.amount,
+        timestamp: Timestamp.now(),
+    });
+}
+
+if (oldData.interestRate !== newData.interestRate) {
+
+    actions.push({
+      actionNumber: "22",
+        userId: selectedUser.id,
+        description: `Updated Contract Interest Rate: from ${oldData.interestRate}% to ${newData.interestRate}%`,
+        oldValue: `${oldData.interestRate}%`,
+        newValue: `${newData.interestRate}%`,
+        timestamp: Timestamp.now(),
+    });
+}
+
+if (oldData.dateOfMaturity.toDate().toISOString() !== newData.dateOfMaturity.toDate().toISOString()) {
+
+    actions.push({
+      actionNumber: "21",
+        userId: selectedUser.id,
+        description: `Updated Contract Date Of Maturity: from ${oldData.dateOfMaturity.toDate().toLocaleDateString()} to ${newData.dateOfMaturity.toDate().toLocaleDateString()}`,
+        oldValue: oldData.dateOfMaturity.toDate().toLocaleDateString(),
+        newValue: newData.dateOfMaturity.toDate().toLocaleDateString(),
+        timestamp: Timestamp.now(),
+    });
+}
+
+        if (actions.length > 0) {
+            for (const action of actions) {
+                await updateDoc(historyRef, {
+                    actions: arrayUnion(action), // Add each action separately
+                });
+            }
+
+            console.log("Transaction updated and logged in admin history:", actions);
+        } else {
+            console.log("No changes were made to log.");
+        }
+
+        setEditingId(null);
     } catch (error) {
-      console.error("Error updating transaction:", error);
+        console.error("Error updating transaction:", error);
     }
-  };
+};
+
+    
 
   const handleDelete = async (transactionId) => {
     try {
@@ -161,37 +248,36 @@ export default function UserList() {
   const saveNewTransaction = async () => {
     if (
       !newTransaction?.amount ||
-      !newTransaction?.dateOfMaturity || // Ensure this is correctly referenced
-      !newTransaction?.interestRate 
+      !newTransaction?.dateOfMaturity ||
+      !newTransaction?.interestRate
     ) {
       alert("Please fill in all fields");
       return;
     }
-
+  
     if (!selectedUser) {
       alert("No user selected");
       return;
     }
-
-    // Validate the date before converting it
+  
     const maturityDate = new Date(newTransaction.dateOfMaturity);
     if (isNaN(maturityDate)) {
       alert("Invalid date value");
       return;
     }
-
+  
     try {
       const transactionRef = collection(
         db,
         `users/${selectedUser.id}/investmentProfiles`
       );
-
+  
       const docRef = await addDoc(transactionRef, {
         amount: Number(newTransaction.amount),
         interestRate: Number(newTransaction.interestRate),
-        dateOfMaturity: Timestamp.fromDate(maturityDate), // Use validated date
+        dateOfMaturity: Timestamp.fromDate(maturityDate),
       });
-
+  
       setInvestmentProfile((prev) => [
         ...prev,
         {
@@ -201,12 +287,40 @@ export default function UserList() {
           dateOfMaturity: Timestamp.fromDate(maturityDate),
         },
       ]);
-
+  
+      const storedAdminId = localStorage.getItem("adminId");
+      const storedSessionId = localStorage.getItem("sessionId");
+  
+      if (!storedAdminId || !storedSessionId) {
+        console.error("Admin ID or Session ID is missing!");
+        return;
+      }
+  
+      const historyRef = doc(db, "admin", storedAdminId, "admin_history", storedSessionId);
+  
+      const actionLog = {
+        actionNumber: 23,
+        userId: selectedUser.id,
+        description: `Added new investment profile with amount ₱${newTransaction.amount}, interest rate ${newTransaction.interestRate}%, and maturity date ${maturityDate.toLocaleDateString()}`,
+        newValue: {
+          amount: newTransaction.amount,
+          interestRate: newTransaction.interestRate,
+          dateOfMaturity: maturityDate.toLocaleDateString(),
+        },
+        timestamp: Timestamp.now(),
+      };
+  
+      await updateDoc(historyRef, {
+        actions: arrayUnion(actionLog),
+      });
+  
+      console.log("New transaction saved and logged.");
       setNewTransaction(null);
     } catch (error) {
       console.error("Error saving transaction:", error);
     }
-};
+  };
+  
   
   
     const handleAddTransaction = () => {

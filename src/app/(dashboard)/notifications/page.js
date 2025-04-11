@@ -1,7 +1,12 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { db } from '../../../../script/firebaseConfig'; // Adjust according to your Firebase config
-import { collection, getDocs } from 'firebase/firestore';
+import { auth, db } from '../../../../script/firebaseConfig'; // Adjust according to your Firebase config
+import { addDoc, serverTimestamp, collection, getDocs } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+
+import axios from 'axios'; // Import axios for HTTP requests
+
+
 
 const Notifications = () => {
   const [title, setTitle] = useState('');
@@ -14,6 +19,74 @@ const Notifications = () => {
   const [selectedUsers, setSelectedUsers] = useState([]); // Store selected users
   const [selectAll, setSelectAll] = useState(false); // Track "Select All" state
   const [searchQuery, setSearchQuery] = useState(''); // Track search input
+
+
+
+
+  const handleSendNotification = async () => {
+    const APP_ID = process.env.NEXT_PUBLIC_NATIVE_NOTIFY_APP_ID;
+    const APP_TOKEN = process.env.NEXT_PUBLIC_NATIVE_NOTIFY_APP_TOKEN;
+  
+    if (!APP_ID || !APP_TOKEN) {
+      console.error("Missing Native Notify APP_ID or APP_TOKEN");
+      return alert("Notification service is not configured properly.");
+    }
+  
+    if (!title || !message || selectedUsers.length === 0) {
+      return alert("Please fill out all fields and select at least one user.");
+    }
+  
+    const admin = auth.currentUser;
+    if (!admin) {
+      alert("Admin not authenticated");
+      return;
+    }
+  
+    try {
+      // Send notification to each selected user
+      for (const userId of selectedUsers) {
+        const user = userList.find((u) => u.id === userId);
+  
+        if (user) {
+          await axios.post('https://app.nativenotify.com/api/indie/notification', {
+            subID: user.id, // This is the Firestore user ID
+            appId: APP_ID,
+            appToken: APP_TOKEN,
+            title,
+            message,
+          });
+        }
+      }
+  
+      // Save notification info to Firestore
+      // await addDoc(collection(db, "notifications"), {
+      //   title,
+      //   message,
+      //   sentTo: selectedUsers.map((id) => {
+      //     const user = userList.find((u) => u.id === id);
+      //     return user
+      //       ? {
+      //           uid: user.id,
+      //           fullName: `${user.firstName} ${user.lastName}`,
+      //         }
+      //       : { uid: id, fullName: "Unknown" };
+      //   }),
+      //   sentBy: {
+      //     uid: admin.uid,
+      //     email: admin.email,
+      //   },
+      //   sentAt: serverTimestamp(),
+      // });
+  
+      alert(`Notification sent to ${selectedUsers.length} user(s)!`);
+      handleClear();
+    } catch (error) {
+      console.error("Error sending notifications:", error);
+      alert("Something went wrong while sending notifications.");
+    }
+  };
+  
+  
 
   useEffect(() => {
     // Fetching users from Firestore when the modal is opened
@@ -49,6 +122,7 @@ const Notifications = () => {
     setTitle('');
     setMessage('');
     setUsers('');
+    setSelectedUsers([]);
   };
 
   const handleAddUser = () => {
@@ -246,8 +320,13 @@ const Notifications = () => {
           </div>
         )}
 
+
+alert(`Notification sent to ${selectedUsers.length} user(s)!`);
+
         <div className="flex justify-between space-x-4 mt-auto">
-          <button className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">
+          <button 
+           onClick={handleSendNotification}
+          className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">
             Send
           </button>
           <button

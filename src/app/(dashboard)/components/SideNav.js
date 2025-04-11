@@ -16,6 +16,7 @@ import HistoryIcon from "@mui/icons-material/History";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ListIcon from "@mui/icons-material/List";
+import NotificationsIcon from "@mui/icons-material/Notifications";
 
 const SideNav = () => {
   const [mounted, setMounted] = useState(false);
@@ -32,6 +33,7 @@ const SideNav = () => {
     { text: "Transaction List", icon: <ReceiptIcon />, link: "/transactionhistory" },
     { text: "Contract List", icon: <DescriptionIcon />, link: "/contractlist" },
     { text: "Service List", icon: <ListIcon />, link: "/servicelist" },
+    { text: "Notifications", icon: <NotificationsIcon />, link: "/notifications" },
   ];
 
   return (

@@ -14,11 +14,16 @@
     "@heroicons/react": "^2.2.0",
     "@mui/icons-material": "^6.4.7",
     "@mui/material": "^6.4.7",
+    "axios": "^1.8.4",
     "firebase": "^11.4.0",
     "framer-motion": "^12.5.0",
+    "lucide": "^0.479.0",
+    "lucide-react": "^0.479.0",
+    "native-notify": "^4.0.9",
     "next": "15.2.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
     "react-router-dom": "^7.3.0"
   },
   "devDependencies": {

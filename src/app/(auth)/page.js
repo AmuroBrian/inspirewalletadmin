@@ -1,15 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { 
-  onAuthStateChanged, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword 
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 import { auth, db } from "../../../script/firebaseConfig"; // Import Firestore
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { doc, getDoc, setDoc } from "firebase/firestore"; // Firestore functions
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  serverTimestamp,
+  collection,
+  addDoc,
+} from "firebase/firestore"; // Firestore functions
 
 export default function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -32,43 +39,97 @@ export default function AuthForm() {
       setFormData({ ...formData, [name]: value });
     }
   };
-  
+
+  const handleAdminLogin = async (adminId) => {
+    try {
+      // ✅ Fetch the admin's full name
+      const adminRef = doc(db, "admin", adminId);
+      const adminSnap = await getDoc(adminRef);
+      if (!adminSnap.exists()) {
+        console.error("Admin document not found!");
+        return null;
+      }
+
+      const adminData = adminSnap.data();
+      const fullName = adminData.fullName || "Unknown Admin"; // Ensure we get a valid name
+
+      // ✅ Generate sessionId (Firestore auto-generated ID)
+      const sessionRef = doc(collection(db, "admin", adminId, "admin_history"));
+      const sessionId = sessionRef.id;
+
+      // ✅ Store login details in Firestore with full name
+      await setDoc(sessionRef, {
+        fullName, // Include admin full name
+        loginTime: serverTimestamp(),
+        logoutTime: null, // Will update on logout
+        actions: [],
+      });
+
+      // ✅ Store sessionId in localStorage for tracking
+      localStorage.setItem("sessionId", sessionId);
+      console.log("Session ID stored:", sessionId);
+
+      return sessionId; // Return the sessionId
+    } catch (error) {
+      console.error("Error recording admin login:", error);
+      return null;
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-  
+
     try {
       if (isSignUp) {
-        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, password);
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          formData.email,
+          password
+        );
         const user = userCredential.user;
         const aid = user.uid;
-  
+
         await setDoc(doc(db, "admin", aid), {
           fullName: formData.fullName,
           email: formData.email,
           userName: formData.userName,
           aid: aid,
         });
+
         alert("Account created successfully!");
       } else {
-        const userCredential = await signInWithEmailAndPassword(auth, formData.email, password);
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          formData.email,
+          password
+        );
         const user = userCredential.user;
-        console.log("Email: ", user.email);
-        console.log("UID: ", user.uid);
-  
-        // Check if user exists in "admin" collection
-        const userDoc = await getDoc(doc(db, "admin", user.uid));
+        const aid = user.uid;
+
+        const userDoc = await getDoc(doc(db, "admin", aid));
         if (!userDoc.exists()) {
           alert("You are not authorized to log in.");
           return;
         }
+
+        // ✅ Store adminId in localStorage
+        localStorage.setItem("adminId", aid);
+
+        // ✅ Generate sessionId and store it
+        const sessionId = await handleAdminLogin(aid);
+        if (!sessionId) {
+          throw new Error("Failed to create sessionId.");
+        }
+
+        console.log("Admin ID stored:", aid);
+        console.log("Final sessionId before redirect:", sessionId);
+
+        alert("Logged in successfully!");
+        router.push("/main");
       }
-  
-      alert("Logged in successfully!");
-      router.push("/dashboard/main");  // Redirect to dashboard
-  
     } catch (err) {
+      console.error("Login error:", err);
       setError(err.message);
     }
   };
@@ -92,9 +153,21 @@ export default function AuthForm() {
             className="w-full flex flex-col items-center justify-center"
           >
             {isSignUp ? (
-              <SignUpForm formData={formData} handleChange={handleChange} handleSubmit={handleSubmit} error={error} password={password} />
+              <SignUpForm
+                formData={formData}
+                handleChange={handleChange}
+                handleSubmit={handleSubmit}
+                error={error}
+                password={password}
+              />
             ) : (
-              <SignInForm formData={formData} handleChange={handleChange} handleSubmit={handleSubmit} error={error} password={password} />
+              <SignInForm
+                formData={formData}
+                handleChange={handleChange}
+                handleSubmit={handleSubmit}
+                error={error}
+                password={password}
+              />
             )}
           </motion.div>
         </motion.div>
@@ -112,7 +185,7 @@ export default function AuthForm() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-6 py-2 bg-gray-700 text-white rounded-lgWWWWW shadow-md hover:bg-gray-600 transition-all"
+            className="px-6 py-2 bg-gray-700 text-white rounded-lg shadow-md hover:bg-gray-600 transition-all"
             onClick={() => setIsSignUp(!isSignUp)}
           >
             {isSignUp ? "Sign In" : "Sign Up"}
@@ -148,7 +221,10 @@ function SignInForm({ formData, handleChange, handleSubmit, error, password }) {
           required
         />
 
-        <button type="submit" className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600">
+        <button
+          type="submit"
+          className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600"
+        >
           Sign In
         </button>
       </form>
@@ -199,7 +275,10 @@ function SignUpForm({ formData, handleChange, handleSubmit, error, password }) {
           className="mb-3 p-2 border rounded w-56"
           required
         />
-        <button type="submit" className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600">
+        <button
+          type="submit"
+          className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600"
+        >
           Sign Up
         </button>
       </form>

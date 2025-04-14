@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDoc, doc, updateDoc } from "firebase/firestore";
 import { serverTimestamp } from "firebase/firestore"; // Import serverTimestamp
@@ -16,17 +17,22 @@ const TopNav = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const router = useRouter();
   const auth = getAuth(); // Firebase Authentication instance
+  const [fullName, setFullName] = useState("");
+
 
   // Fetch the logged-in admin's ID from Firebase Auth and Firestore
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          const adminRef = doc(db, "admin", user.uid); // Assuming adminId = user.uid
+          const adminRef = doc(db, "admin", user.uid);
           const adminSnap = await getDoc(adminRef);
+
           if (adminSnap.exists()) {
-            setAdminId(user.uid); // Set the adminId
-            console.log("Admin ID retrieved:", user.uid);
+            const adminData = adminSnap.data();
+            setAdminId(user.uid);
+            setFullName(adminData.fullName || "");
+            console.log("Admin data retrieved:", adminData);
           } else {
             console.warn("Admin document not found in Firestore.");
           }
@@ -38,7 +44,7 @@ const TopNav = () => {
       }
     });
 
-    return () => unsubscribe(); // Cleanup subscription
+    return () => unsubscribe(); // Cleanup
   }, [auth]);
 
   // Function to handle logout and update timestamp in Firestore
@@ -95,9 +101,38 @@ const TopNav = () => {
     }
   };
 
+  const pathTitleMap = {
+    "/main": "Dashboard",
+    "/adminhistory": "Admin History",
+    "/transactionhistory": "Transaction List",
+    "/contractlist": "Contract List",
+    "/servicelist": "Service List",
+    "/notifications": "Notifications",
+  };
+
+  const pathname = usePathname();
+const currentTitle = pathTitleMap[pathname] || "Admin Dashboard";
+
+  
+  
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  };
+
   return (
     <div className="fixed top-0 left-0 w-full bg-purple-100 shadow-md z-10 p-4 flex justify-between">
-      <h1 className="text-xl font-semibold ml-64">Admin Dashboard</h1>
+     
+
+      
+      
+      <span className="text-gray-800 font-semibold text-xl ml-64">{`${getGreeting()}, ${fullName}`}</span>
+
+      <h1 className="text-xl font-semibold -ml-64">{currentTitle}</h1>
+
+
 
       <div className="relative">
         <button

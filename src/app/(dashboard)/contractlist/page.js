@@ -12,7 +12,7 @@ import {
   deleteDoc,
   addDoc, // ✅ Add this import
   Timestamp, // ✅ Add this import
-  arrayUnion 
+  arrayUnion,
 } from "firebase/firestore";
 
 export default function UserList() {
@@ -25,7 +25,6 @@ export default function UserList() {
   const [newTransaction, setNewTransaction] = useState(null);
   const [loading, setLoading] = useState(true);
 
-
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -37,7 +36,7 @@ export default function UserList() {
         setUsers(usersList);
       } catch (error) {
         console.error("Error fetching users:", error);
-      }finally {
+      } finally {
         // Delay setting loading to false for 5 seconds
         setTimeout(() => {
           setLoading(false);
@@ -102,28 +101,32 @@ export default function UserList() {
     try {
       const storedAdminId = localStorage.getItem("adminId");
       const storedSessionId = localStorage.getItem("sessionId");
-  
+
       if (!storedAdminId || !storedSessionId) {
         console.error("Admin ID or session ID is missing.");
         return;
       }
-  
+
       console.log("Using Admin ID:", storedAdminId);
       console.log("Using Session ID:", storedSessionId);
-  
+
       await updateDoc(doc(db, "users", userId), {
         [field]: newValue === "Yes",
       });
-  
-      
-  
-      const historyRef = doc(db, "admin", storedAdminId, "admin_history", storedSessionId);
-  
+
+      const historyRef = doc(
+        db,
+        "admin",
+        storedAdminId,
+        "admin_history",
+        storedSessionId
+      );
+
       // ✅ Append the new action to the `actions` array
       await updateDoc(historyRef, {
         actions: arrayUnion(actionLog),
       });
-  
+
       console.log("User status updated and action logged successfully.");
     } catch (error) {
       console.error("Error updating user status:", error);
@@ -134,95 +137,112 @@ export default function UserList() {
     if (!selectedUser || !editingId) return;
 
     try {
-        const transactionDoc = doc(db, `users/${selectedUser.id}/investmentProfiles`, editingId);
-        const transactionSnap = await getDoc(transactionDoc);
+      const transactionDoc = doc(
+        db,
+        `users/${selectedUser.id}/investmentProfiles`,
+        editingId
+      );
+      const transactionSnap = await getDoc(transactionDoc);
 
-        if (!transactionSnap.exists()) {
-            console.error("Transaction not found!");
-            return;
+      if (!transactionSnap.exists()) {
+        console.error("Transaction not found!");
+        return;
+      }
+
+      const oldData = transactionSnap.data();
+      const newData = {
+        amount: Number(editedTransaction.amount),
+        interestRate: Number(editedTransaction.interestRate),
+        dateOfMaturity: Timestamp.fromDate(new Date(editedTransaction.date)),
+      };
+
+      await updateDoc(transactionDoc, newData);
+
+      setInvestmentProfile((prev) =>
+        prev.map((trans) =>
+          trans.id === editingId ? { ...trans, ...newData } : trans
+        )
+      );
+
+      const storedAdminId = localStorage.getItem("adminId");
+      const storedSessionId = localStorage.getItem("sessionId");
+      const adminName = localStorage.getItem("adminName"); // Assuming admin name is stored
+
+      if (!storedAdminId || !storedSessionId) {
+        console.error("Admin ID or Session ID is missing!");
+        return;
+      }
+
+      const historyRef = doc(
+        db,
+        "admin",
+        storedAdminId,
+        "admin_history",
+        storedSessionId
+      );
+
+      let actions = [];
+
+      if (oldData.amount !== newData.amount) {
+        actions.push({
+          actionNumber: "20",
+          userId: selectedUser.id,
+          description: `Updated Contract Amount: from ${oldData.amount} to ${newData.amount}`,
+          oldValue: oldData.amount,
+          newValue: newData.amount,
+          timestamp: Timestamp.now(),
+        });
+      }
+
+      if (oldData.interestRate !== newData.interestRate) {
+        actions.push({
+          actionNumber: "22",
+          userId: selectedUser.id,
+          description: `Updated Contract Interest Rate: from ${oldData.interestRate}% to ${newData.interestRate}%`,
+          oldValue: `${oldData.interestRate}%`,
+          newValue: `${newData.interestRate}%`,
+          timestamp: Timestamp.now(),
+        });
+      }
+
+      if (
+        oldData.dateOfMaturity.toDate().toISOString() !==
+        newData.dateOfMaturity.toDate().toISOString()
+      ) {
+        actions.push({
+          actionNumber: "21",
+          userId: selectedUser.id,
+          description: `Updated Contract Date Of Maturity: from ${oldData.dateOfMaturity
+            .toDate()
+            .toLocaleDateString()} to ${newData.dateOfMaturity
+            .toDate()
+            .toLocaleDateString()}`,
+          oldValue: oldData.dateOfMaturity.toDate().toLocaleDateString(),
+          newValue: newData.dateOfMaturity.toDate().toLocaleDateString(),
+          timestamp: Timestamp.now(),
+        });
+      }
+
+      if (actions.length > 0) {
+        for (const action of actions) {
+          await updateDoc(historyRef, {
+            actions: arrayUnion(action), // Add each action separately
+          });
         }
 
-        const oldData = transactionSnap.data();
-        const newData = {
-            amount: Number(editedTransaction.amount),
-            interestRate: Number(editedTransaction.interestRate),
-            dateOfMaturity: Timestamp.fromDate(new Date(editedTransaction.date)),
-        };
-
-        await updateDoc(transactionDoc, newData);
-
-        setInvestmentProfile((prev) =>
-            prev.map((trans) => (trans.id === editingId ? { ...trans, ...newData } : trans))
+        console.log(
+          "Transaction updated and logged in admin history:",
+          actions
         );
+      } else {
+        console.log("No changes were made to log.");
+      }
 
-        const storedAdminId = localStorage.getItem("adminId");
-        const storedSessionId = localStorage.getItem("sessionId");
-        const adminName = localStorage.getItem("adminName"); // Assuming admin name is stored
-
-        if (!storedAdminId || !storedSessionId) {
-            console.error("Admin ID or Session ID is missing!");
-            return;
-        }
-
-        const historyRef = doc(db, "admin", storedAdminId, "admin_history", storedSessionId);
-
-        let actions = [];
-
-if (oldData.amount !== newData.amount) {
-  
-    actions.push({
-        actionNumber: "20",
-        userId: selectedUser.id,
-        description: `Updated Contract Amount: from ${oldData.amount} to ${newData.amount}`,
-        oldValue: oldData.amount,
-        newValue: newData.amount,
-        timestamp: Timestamp.now(),
-    });
-}
-
-if (oldData.interestRate !== newData.interestRate) {
-
-    actions.push({
-      actionNumber: "22",
-        userId: selectedUser.id,
-        description: `Updated Contract Interest Rate: from ${oldData.interestRate}% to ${newData.interestRate}%`,
-        oldValue: `${oldData.interestRate}%`,
-        newValue: `${newData.interestRate}%`,
-        timestamp: Timestamp.now(),
-    });
-}
-
-if (oldData.dateOfMaturity.toDate().toISOString() !== newData.dateOfMaturity.toDate().toISOString()) {
-
-    actions.push({
-      actionNumber: "21",
-        userId: selectedUser.id,
-        description: `Updated Contract Date Of Maturity: from ${oldData.dateOfMaturity.toDate().toLocaleDateString()} to ${newData.dateOfMaturity.toDate().toLocaleDateString()}`,
-        oldValue: oldData.dateOfMaturity.toDate().toLocaleDateString(),
-        newValue: newData.dateOfMaturity.toDate().toLocaleDateString(),
-        timestamp: Timestamp.now(),
-    });
-}
-
-        if (actions.length > 0) {
-            for (const action of actions) {
-                await updateDoc(historyRef, {
-                    actions: arrayUnion(action), // Add each action separately
-                });
-            }
-
-            console.log("Transaction updated and logged in admin history:", actions);
-        } else {
-            console.log("No changes were made to log.");
-        }
-
-        setEditingId(null);
+      setEditingId(null);
     } catch (error) {
-        console.error("Error updating transaction:", error);
+      console.error("Error updating transaction:", error);
     }
-};
-
-    
+  };
 
   const handleDelete = async (transactionId) => {
     try {
@@ -240,11 +260,13 @@ if (oldData.dateOfMaturity.toDate().toISOString() !== newData.dateOfMaturity.toD
   const handleNewChange = (e, field) => {
     setNewTransaction((prev) => ({
       ...prev,
-      [field]: field === "amount" || field === "interestRate" ? Number(e.target.value) : e.target.value,
+      [field]:
+        field === "amount" || field === "interestRate"
+          ? Number(e.target.value)
+          : e.target.value,
     }));
   };
-  
-  
+
   const saveNewTransaction = async () => {
     if (
       !newTransaction?.amount ||
@@ -254,30 +276,30 @@ if (oldData.dateOfMaturity.toDate().toISOString() !== newData.dateOfMaturity.toD
       alert("Please fill in all fields");
       return;
     }
-  
+
     if (!selectedUser) {
       alert("No user selected");
       return;
     }
-  
+
     const maturityDate = new Date(newTransaction.dateOfMaturity);
     if (isNaN(maturityDate)) {
       alert("Invalid date value");
       return;
     }
-  
+
     try {
       const transactionRef = collection(
         db,
         `users/${selectedUser.id}/investmentProfiles`
       );
-  
+
       const docRef = await addDoc(transactionRef, {
         amount: Number(newTransaction.amount),
         interestRate: Number(newTransaction.interestRate),
         dateOfMaturity: Timestamp.fromDate(maturityDate),
       });
-  
+
       setInvestmentProfile((prev) => [
         ...prev,
         {
@@ -287,21 +309,31 @@ if (oldData.dateOfMaturity.toDate().toISOString() !== newData.dateOfMaturity.toD
           dateOfMaturity: Timestamp.fromDate(maturityDate),
         },
       ]);
-  
+
       const storedAdminId = localStorage.getItem("adminId");
       const storedSessionId = localStorage.getItem("sessionId");
-  
+
       if (!storedAdminId || !storedSessionId) {
         console.error("Admin ID or Session ID is missing!");
         return;
       }
-  
-      const historyRef = doc(db, "admin", storedAdminId, "admin_history", storedSessionId);
-  
+
+      const historyRef = doc(
+        db,
+        "admin",
+        storedAdminId,
+        "admin_history",
+        storedSessionId
+      );
+
       const actionLog = {
         actionNumber: 23,
         userId: selectedUser.id,
-        description: `Added new investment profile with amount ₱${newTransaction.amount}, interest rate ${newTransaction.interestRate}%, and maturity date ${maturityDate.toLocaleDateString()}`,
+        description: `Added new investment profile with amount ₱${
+          newTransaction.amount
+        }, interest rate ${
+          newTransaction.interestRate
+        }%, and maturity date ${maturityDate.toLocaleDateString()}`,
         newValue: {
           amount: newTransaction.amount,
           interestRate: newTransaction.interestRate,
@@ -309,27 +341,25 @@ if (oldData.dateOfMaturity.toDate().toISOString() !== newData.dateOfMaturity.toD
         },
         timestamp: Timestamp.now(),
       };
-  
+
       await updateDoc(historyRef, {
         actions: arrayUnion(actionLog),
       });
-  
+
       console.log("New transaction saved and logged.");
       setNewTransaction(null);
     } catch (error) {
       console.error("Error saving transaction:", error);
     }
   };
-  
-  
-  
-    const handleAddTransaction = () => {
-      setNewTransaction({
-        amount: "",
-        dateOfMaturity: new Date().toISOString().split("T")[0], // Default to today's date
-        interestRate: "",
-      });
-    };
+
+  const handleAddTransaction = () => {
+    setNewTransaction({
+      amount: "",
+      dateOfMaturity: new Date().toISOString().split("T")[0], // Default to today's date
+      interestRate: "",
+    });
+  };
 
   const filteredUsers = users.filter((user) =>
     `${user.firstName} ${user.lastName}`
@@ -421,10 +451,10 @@ if (oldData.dateOfMaturity.toDate().toISOString() !== newData.dateOfMaturity.toD
           <div className="bg-white p-6 rounded-lg shadow-lg w-[50%] relative ml-60">
             <button
               className="absolute top-2 right-2 text-gray-600 text-lg font-bold"
-              onClick={() => { setSelectedUser(null);
+              onClick={() => {
+                setSelectedUser(null);
                 setEditingId(null); // Reset edit mode
-    setEditedTransaction(null); // Reset edited data
-
+                setEditedTransaction(null); // Reset edited data
               }}
             >
               &times;
@@ -459,7 +489,9 @@ if (oldData.dateOfMaturity.toDate().toISOString() !== newData.dateOfMaturity.toD
                             <input
                               type="date"
                               value={editedTransaction.dateOfMaturity}
-                              onChange={(e) => handleChange(e, "dateOfMaturity")}
+                              onChange={(e) =>
+                                handleChange(e, "dateOfMaturity")
+                              }
                               className="border p-1 w-full text-center"
                             />
                           </td>
@@ -479,11 +511,11 @@ if (oldData.dateOfMaturity.toDate().toISOString() !== newData.dateOfMaturity.toD
                               ✔
                             </button>
                             <button
-                          onClick={() => setEditingId(null)}
-                          className="p-2 text-red-500 hover:bg-red-100"
-                        >
-                          ✖
-                        </button>
+                              onClick={() => setEditingId(null)}
+                              className="p-2 text-red-500 hover:bg-red-100"
+                            >
+                              ✖
+                            </button>
                           </td>
                         </>
                       ) : (
@@ -539,50 +571,49 @@ if (oldData.dateOfMaturity.toDate().toISOString() !== newData.dateOfMaturity.toD
                   </tr>
                 )}
 
-
                 {/* Show Input Row if Adding New Transaction */}
                 {newTransaction && (
-                    <tr className="border-b">
-                      <td className="p-2 border">
-                        <input
-                          type="number"
-                          className="border rounded p-1 w-full"
-                          value={newTransaction.amount}
-                          onChange={(e) => handleNewChange(e, "amount")}
-                        />
-                      </td>
-                      <td className="p-2 border">
-                        <input
-                          type="date"
-                          className="border rounded p-1 w-full"
-                          value={newTransaction.dateOfMaturity}
-                          onChange={(e) => handleNewChange(e, "dateOfMaturity")}
-                        />
-                      </td>
-                      <td className="p-2 border">
-                        <input
-                          type="number"
-                          className="border rounded p-1 w-full"
-                          value={newTransaction.interestRate }
-                          onChange={(e) => handleNewChange(e, "interestRate")}
-                        />
-                      </td>
-                      <td className="p-2 border">
-                        <button
-                          className="p-2 text-green-500 hover:bg-green-100"
-                          onClick={saveNewTransaction}
-                        >
-                          ✔
-                        </button>
-                        <button
-                          className="p-2 text-red-500 hover:bg-red-100"
-                          onClick={() => setNewTransaction(null)}
-                        >
-                          ✖
-                        </button>
-                      </td>
-                    </tr>
-                  )}
+                  <tr className="border-b">
+                    <td className="p-2 border">
+                      <input
+                        type="number"
+                        className="border rounded p-1 w-full"
+                        value={newTransaction.amount}
+                        onChange={(e) => handleNewChange(e, "amount")}
+                      />
+                    </td>
+                    <td className="p-2 border">
+                      <input
+                        type="date"
+                        className="border rounded p-1 w-full"
+                        value={newTransaction.dateOfMaturity}
+                        onChange={(e) => handleNewChange(e, "dateOfMaturity")}
+                      />
+                    </td>
+                    <td className="p-2 border">
+                      <input
+                        type="number"
+                        className="border rounded p-1 w-full"
+                        value={newTransaction.interestRate}
+                        onChange={(e) => handleNewChange(e, "interestRate")}
+                      />
+                    </td>
+                    <td className="p-2 border">
+                      <button
+                        className="p-2 text-green-500 hover:bg-green-100"
+                        onClick={saveNewTransaction}
+                      >
+                        ✔
+                      </button>
+                      <button
+                        className="p-2 text-red-500 hover:bg-red-100"
+                        onClick={() => setNewTransaction(null)}
+                      >
+                        ✖
+                      </button>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
 

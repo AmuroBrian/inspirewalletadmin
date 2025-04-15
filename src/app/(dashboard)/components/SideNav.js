@@ -32,7 +32,7 @@ const SideNav = () => {
     { text: "Admin History", icon: <HistoryIcon />, link: "/adminhistory" },
     { text: "Transaction List", icon: <ReceiptIcon />, link: "/transactionhistory" },
     { text: "Contract List", icon: <DescriptionIcon />, link: "/contractlist" },
-    { text: "Service List", icon: <ListIcon />, link: "/servicelist" },
+    //{ text: "Service List", icon: <ListIcon />, link: "/servicelist" },
     { text: "Notifications", icon: <NotificationsIcon />, link: "/notifications" },
   ];
 

@@ -3,7 +3,7 @@ import React from 'react'
 export default function ServiceList() {
   return (
         <div>
-          Service List
+          <h1> WORK IN PROGRESS </h1>
         </div>
   )
 }

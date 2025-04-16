@@ -134,20 +134,17 @@ export default function AuthForm() {
     }
   };
   const [allowed, setAllowed] = useState(null);
-
-  //You can also visit this website to know your accurate IP Address: https://whatismyipaddress.com/#google_vignette
   useEffect(() => {
     async function checkIp() {
       try {
         console.log('Fetching IP...');
-        const res = await fetch('https://api64.ipify.org?format=json');
+        const res = await fetch('/api/get-ip'); // ✅ your own API route
         const data = await res.json();
         const userIp = data.ip;
-
+  
         console.log('Fetched IP:', userIp);
-        const allowedIp = '61.28.197.253'; // ✅ Your Wi-Fi's public IP
-        console.log('Allowed IP:', allowedIp);
-
+        const allowedIp = '61.28.197.253';
+  
         if (userIp === allowedIp) {
           console.log('IP matched! Access granted.');
           setAllowed(true);
@@ -162,9 +159,10 @@ export default function AuthForm() {
         router.push('/denied');
       }
     }
-
+  
     checkIp();
   }, [router]);
+  
 
   if (allowed === null) {
     return <main className="text-center mt-10 text-gray-500">Checking Wi-Fi access...</main>;

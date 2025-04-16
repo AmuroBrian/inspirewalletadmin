@@ -113,15 +113,17 @@ const AdminHistoryPage = () => {
   };
 
   return (
-    <div className="w-[198vh] pl-[17%] mt-4 p-4 bg-white shadow-md rounded-lg">
+    <div className="w-full mt-4 p-4 bg-white shadow-md rounded-lg overflow-x-auto max-w-[83%] mx-auto lg:ml-[250px]">
       <h2 className="text-lg font-bold mb-4">Admin History</h2>
 
-      <table className="w-full border-collapse border border-gray-300">
+      <table className="w-full mx-auto border-collapse border border-gray-300 text-sm lg:text-base">
         <thead>
           <tr className="bg-gray-200">
-            <th className="border p-2">Admin Name</th>
+            <th className="border px-3 py-2 whitespace-nowrap w-[180px]">
+              Admin Name
+            </th>
             <th
-              className={`border p-2 cursor-pointer ${
+              className={`border px-3 py-2 cursor-pointer whitespace-nowrap w-[160px] ${
                 sortConfig.key === "loginTime"
                   ? "text-blue-600 font-semibold"
                   : ""
@@ -130,14 +132,14 @@ const AdminHistoryPage = () => {
             >
               Login Time{" "}
               {sortConfig.key === "loginTime" && (
-                <span className="ml-1 text-xl">
+                <span className="ml-1 text-base">
                   {sortConfig.order === "asc" ? "▲" : "▼"}
                 </span>
               )}
             </th>
 
             <th
-              className={`border p-2 cursor-pointer ${
+              className={`border px-3 py-2 cursor-pointer whitespace-nowrap w-[160px] ${
                 sortConfig.key === "logoutTime"
                   ? "text-blue-600 font-semibold"
                   : ""
@@ -146,30 +148,35 @@ const AdminHistoryPage = () => {
             >
               Logout Time{" "}
               {sortConfig.key === "logoutTime" && (
-                <span className="ml-1 text-xl">
+                <span className="ml-1 text-base">
                   {sortConfig.order === "asc" ? "▲" : "▼"}
                 </span>
               )}
             </th>
-            <th className="border p-2">Actions</th>
+            <th className="border px-4 py-2 whitespace-nowrap">Actions</th>
           </tr>
         </thead>
         <tbody>
           {history.length > 0 ? (
             history.map((item) => (
-              <tr key={item.id} className="text-center">
-                <td className="border p-2">{item.adminFullName}</td>
-                <td className="border p-2">
+              <tr key={item.id} className="text-center align-top">
+                <td className="border px-3 py-2 break-words max-w-[180px]">
+                  {item.adminFullName}
+                </td>
+                <td className="border px-3 py-2 whitespace-nowrap">
                   {formatTimestamp(item.loginTime)}
                 </td>
-                <td className="border p-2">
+                <td className="border px-3 py-2 whitespace-nowrap">
                   {formatTimestamp(item.logoutTime)}
                 </td>
-                <td className="border p-2 text-left">
+                <td className="border px-4 py-2 text-left break-words max-w-[300px]">
                   {Array.isArray(item.actions) && item.actions.length > 0 ? (
-                    <ul className="list-disc pl-4">
+                    <ul className="list-disc pl-4 space-y-1">
                       {item.actions.map((action, index) => (
-                        <li key={index}>
+                        <li
+                          key={index}
+                          className="text-xs lg:text-sm break-words"
+                        >
                           {action.description || "Action performed"} (User:{" "}
                           {action.fullName || "Unknown"}) at{" "}
                           {formatTimestamp(action.timestamp)}

@@ -19,7 +19,6 @@ const TopNav = () => {
   const auth = getAuth(); // Firebase Authentication instance
   const [fullName, setFullName] = useState("");
 
-
   // Fetch the logged-in admin's ID from Firebase Auth and Firestore
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -111,10 +110,8 @@ const TopNav = () => {
   };
 
   const pathname = usePathname();
-const currentTitle = pathTitleMap[pathname] || "Admin Dashboard";
+  const currentTitle = pathTitleMap[pathname] || "Admin Dashboard";
 
-  
-  
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -124,15 +121,25 @@ const currentTitle = pathTitleMap[pathname] || "Admin Dashboard";
 
   return (
     <div className="fixed top-0 left-0 w-full bg-purple-100 shadow-md z-10 p-4 flex justify-between">
-     
+      <div className="ml-[250px] px-4 sm:px-8 md:px-12 lg:px-16 xl:px-24 mt-4 w-[calc(100%-250px)]">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-2">
+          <span className="text-gray-800 font-semibold text-base md:text-lg lg:text-xl text-left w-full lg:w-auto">
+            {`${getGreeting()}, ${fullName}`}
+          </span>
 
-      
-      
-      <span className="text-gray-800 font-semibold text-xl ml-64">{`${getGreeting()}, ${fullName}`}</span>
-
-      <h1 className="text-xl font-semibold -ml-64">{currentTitle}</h1>
-
-
+          <h1
+            className="
+    text-base md:text-lg lg:text-xl font-semibold
+    text-left lg:text-center
+    w-full lg:w-auto
+    lg:ml-8 xl:ml-0
+    lg:flex-1
+  "
+          >
+            {currentTitle}
+          </h1>
+        </div>
+      </div>
 
       <div className="relative">
         <button
@@ -144,11 +151,11 @@ const currentTitle = pathTitleMap[pathname] || "Admin Dashboard";
         {dropdownOpen && (
           <div className="absolute right-0 mt-2 w-40 bg-white shadow-md rounded-md">
             <button
-  onClick={() => router.push("/settings")}
-  className="flex items-center p-2 hover:bg-gray-100 w-full"
->
-  <Cog6ToothIcon className="w-5 h-5 mr-2" /> Settings
-</button>
+              onClick={() => router.push("/settings")}
+              className="flex items-center p-2 hover:bg-gray-100 w-full"
+            >
+              <Cog6ToothIcon className="w-5 h-5 mr-2" /> Settings
+            </button>
 
             <button
               onClick={handleRedirect}

@@ -22,6 +22,13 @@ const UserTable = ({ adminId }) => {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [withdrawType, setWithdrawType] = useState(""); // 'agent' or 'balance'
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [selectedWithdrawType, setSelectedWithdrawType] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [remainingBalance, setRemainingBalance] = useState(null);  
   const [modalMessage, setModalMessage] = useState("");
   const [deletingUserId, setDeletingUserId] = useState(null);
   const [deletionStatus, setDeletionStatus] = useState("");
@@ -64,6 +71,26 @@ const UserTable = ({ adminId }) => {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (!selectedUser || !selectedWithdrawType) return;
+  
+      const docRef = doc(db, "users", selectedUser.uid);
+      const docSnap = await getDoc(docRef);
+  
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const balance =
+          selectedWithdrawType === "agent"
+            ? data.agentWalletAmount
+            : data.availBalanceAmount;
+        setRemainingBalance(balance);
+      }
+    };
+  
+    fetchBalance();
+  }, [selectedWithdrawType, selectedUser]);
+  
   const updateUserStatus = async (userId, field, newValue) => {
     try {
       // ✅ Retrieve adminId and sessionId from localStorage
@@ -209,12 +236,77 @@ const UserTable = ({ adminId }) => {
     }
   };
 
-  const openWithdrawModal = (user) => {
-    console.log("Withdrawing User Data:", user); // Check if user data is correct
-    //setEditingUser(user);
-    // setIsEditing(true);  // Enable editing
-    setIsModalOpen(true);
+  const openWithdrawModal = (user, type) => {
+    setSelectedUser(user); // Store user
+    setWithdrawType(type); // 'agent' or 'balance'
+    setIsWithdrawChoiceModalOpen(false); // Close first modal
+    setIsWithdrawModalOpen(true); // Open actual withdrawal modal
+  
+    // Fetch the correct balance from Firestore
+    const userRef = doc(db, "users", user.id);
+    getDoc(userRef)
+      .then((docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const balance =
+            type === "agent" ? data.agentWalletAmount : data.availBalanceAmount;
+          setRemainingBalance(balance ?? 0);
+        } else {
+          console.error("User not found");
+          setRemainingBalance(0);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching user data:", error);
+        setRemainingBalance(0);
+      });
   };
+  
+  const handleWithdrawTypeSelect = async (type) => {
+    setWithdrawType(type);
+    setIsWithdrawModalOpen(false);
+    setIsDetailsModalOpen(true);
+  
+    if (!selectedUser) return;
+  
+    try {
+      const userRef = doc(db, "users", selectedUser.id); // or .uid if that’s what your user object uses
+      const docSnap = await getDoc(userRef);
+  
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const balance = type === "agent" ? data.agentWalletAmount : data.availBalanceAmount;
+        setRemainingBalance(balance ?? 0);
+      } else {
+        console.error("User not found");
+        setRemainingBalance(0);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      setRemainingBalance(0);
+    }
+  };
+  
+  const handleConfirm = () => {
+    if (withdrawAmount >= 0 && withdrawAmount !== "") {
+      // Add your logic here for processing the withdrawal
+      console.log(`Confirmed ${selectedWithdrawType} withdrawal: ₱${withdrawAmount}`);
+  
+      // Reset or close modal
+      setWithdrawAmount("");
+      setSelectedWithdrawType("");
+      setIsDetailsModalOpen(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setWithdrawAmount("");
+    setSelectedWithdrawType("");
+    setIsDetailsModalOpen(false);
+
+  };
+  
+  
 
   const openEditModal = (user) => {
     console.log("Editing User Data:", user); // Check if user data is correct
@@ -499,6 +591,102 @@ const UserTable = ({ adminId }) => {
         </tbody>
       </table>
 
+      {isWithdrawModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
+            <h2 className="text-lg font-semibold mb-4">
+              Select Withdrawal Type
+            </h2>
+            <div className="flex justify-between gap-4">
+              <button
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full"
+                onClick={() => {
+                  handleWithdrawTypeSelect("agent");
+                  setWithdrawType("agent");
+                  setIsWithdrawModalOpen(false);
+                  setIsDetailsModalOpen(true);
+                }}
+              >
+                Agent Withdrawal
+              </button>
+
+              <button
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full"
+                onClick={() => {
+                  handleWithdrawTypeSelect("balance");
+                  setWithdrawType("balance");
+                  setIsWithdrawModalOpen(false);
+                  setIsDetailsModalOpen(true);
+                }}
+              >
+                Balance Withdrawal
+              </button>
+            </div>
+
+            <button
+              className="mt-4 text-sm text-gray-500 hover:text-gray-700 underline"
+              onClick={() => setIsWithdrawModalOpen(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isDetailsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-xl font-semibold mb-4 text-left capitalize">
+              {withdrawType} withdrawal
+            </h2>
+
+            <div className="flex justify-between text-sm mb-1">
+              <label className="font-medium text-gray-700">
+                {withdrawType === "agent"
+                  ? "Agent Withdrawal"
+                  : "Balance Withdrawal"}
+              </label>
+              <span className="text-gray-500">
+                Remaining Balance:{" "}
+                {remainingBalance !== null
+                  ? `₱${remainingBalance.toLocaleString()}`
+                  : "Loading..."}
+              </span>
+            </div>
+            <input
+              type="number"
+              min="0"
+              placeholder="Enter amount"
+              className="w-full border border-gray-300 rounded px-3 py-2 mb-6"
+              value={withdrawAmount}
+              onChange={(e) => setWithdrawAmount(e.target.value)}
+            />
+
+            <div className="flex justify-center gap-4">
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleConfirm}
+                disabled={withdrawAmount < 0 || withdrawAmount === ""}
+              >
+                Confirm
+              </button>
+              <button
+                className="bg-yellow-500 text-white px-4 py-2 rounded"
+                onClick={() => setWithdrawAmount("")}
+              >
+                Clear
+              </button>
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded"
+                onClick={handleCancel}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isDeleteModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-auto">
@@ -613,17 +801,15 @@ const UserTable = ({ adminId }) => {
             </div>
 
             <div className="flex justify-end mt-4 space-x-3">
-              
-                <button
-                  className={`px-4 py-2 rounded ${
-                    isEditing ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500"
-                  } text-white`}
-                  onClick={openWithdrawModal}
-                  disabled={isEditing} // Disable when editing
-                >
-                  Withdraw
-                </button>
-              
+              <button
+                className={`px-4 py-2 rounded ${
+                  isEditing ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500"
+                } text-white`}
+                onClick={() => setIsWithdrawModalOpen(true)}
+                disabled={isEditing}
+              >
+                Withdraw
+              </button>
 
               {isEditing ? (
                 <button

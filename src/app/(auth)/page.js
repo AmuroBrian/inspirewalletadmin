@@ -140,13 +140,12 @@ export default function AuthForm() {
 
   //You can also visit this website to know your accurate IP Address: https://whatismyipaddress.com/#google_vignette
   useEffect(() => {
-    // Function to get the local IP address using WebRTC
     const getLocalIP = async () => {
       console.log("📡 Attempting to get local IP...");
       const pc = new RTCPeerConnection({ iceServers: [] });
-
       pc.createDataChannel(""); // create bogus channel
-      pc.createOffer().then(offer => pc.setLocalDescription(offer));
+
+      pc.createOffer().then((offer) => pc.setLocalDescription(offer));
 
       pc.onicecandidate = (event) => {
         if (!event || !event.candidate) return;
@@ -162,21 +161,31 @@ export default function AuthForm() {
       };
     };
 
-    // Function to fetch the public IP address using an external API
     const getPublicIP = async () => {
       try {
-        const res = await fetch('https://api64.ipify.org?format=json');
+        const res = await fetch("https://api64.ipify.org?format=json");
         const data = await res.json();
-        console.log("🌍 Public IP Address:", data.ip); // This is your public IP
+        console.log("🌍 Public IP Address:", data.ip);
+        setUserIp(data.ip);
+
+        const allowedIp = "61.28.197.253";
+        if (data.ip === allowedIp) {
+          console.log("✅ Access granted. IP matched.");
+        } else {
+          alert("❌ Access denied. Your IP address is not allowed to access this site.");
+          console.warn("❌ Access denied. IP did not match.");
+          router.push("/denied");
+        }
       } catch (err) {
-        console.error("Error fetching public IP:", err);
+        console.error("IP Fetch failed:", err);
+        alert("❌ Unable to verify your IP address. Redirecting to denied page.");
+        router.push("/denied");
       }
     };
 
-    // Run both functions
     getLocalIP();
     getPublicIP();
-  }, []); 
+  }, [router]);
 
   if (allowed === null) {
     return <main className="text-center mt-10 text-gray-500">Checking Wi-Fi access...</main>;

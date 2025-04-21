@@ -140,29 +140,43 @@ export default function AuthForm() {
 
   //You can also visit this website to know your accurate IP Address: https://whatismyipaddress.com/#google_vignette
   useEffect(() => {
-    async function checkIp() {
+    // Function to get the local IP address using WebRTC
+    const getLocalIP = async () => {
+      console.log("📡 Attempting to get local IP...");
+      const pc = new RTCPeerConnection({ iceServers: [] });
+
+      pc.createDataChannel(""); // create bogus channel
+      pc.createOffer().then(offer => pc.setLocalDescription(offer));
+
+      pc.onicecandidate = (event) => {
+        if (!event || !event.candidate) return;
+
+        const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3})/;
+        const ipMatch = ipRegex.exec(event.candidate.candidate);
+        if (ipMatch) {
+          console.log("📡 Local WiFi IP Address:", ipMatch[1]);
+        }
+
+        pc.onicecandidate = null;
+        pc.close();
+      };
+    };
+
+    // Function to fetch the public IP address using an external API
+    const getPublicIP = async () => {
       try {
         const res = await fetch('https://api64.ipify.org?format=json');
         const data = await res.json();
-        setUserIp(data.ip); // Display IP on screen
-
-        const allowedIp = '61.28.197.253';
-        if (data.ip === allowedIp) {
-          setAllowed(true);
-        } else {
-          alert('Access denied.');
-          router.push('/denied');
-        }
+        console.log("🌍 Public IP Address:", data.ip); // This is your public IP
       } catch (err) {
-        console.error('IP Fetch failed:', err);
-        router.push('/denied');
+        console.error("Error fetching public IP:", err);
       }
-    }
+    };
 
-    if (typeof window !== 'undefined') {
-      checkIp();
-    }
-  }, []);
+    // Run both functions
+    getLocalIP();
+    getPublicIP();
+  }, []); 
 
   if (allowed === null) {
     return <main className="text-center mt-10 text-gray-500">Checking Wi-Fi access...</main>;

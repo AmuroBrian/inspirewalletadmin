@@ -15,7 +15,20 @@ import {
   arrayUnion,
 } from "firebase/firestore";
 
+import { usePathname } from "next/navigation";
+
+const pathTitleMap = {
+  "/main": "Dashboard",
+  "/adminhistory": "Admin History",
+  "/transactionhistory": "Transaction List",
+  "/contractlist": "Contract List",
+  "/servicelist": "Service List",
+  "/notifications": "Notifications",
+};
+
 export default function UserList() {
+   const pathname = usePathname(); // ✅ Correct: inside component
+    const currentTitle = pathTitleMap[pathname] || "Admin Dashboard";
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -406,6 +419,19 @@ export default function UserList() {
   }
 
   return (
+    <>
+    <h1
+            className="
+              text-base md:text-lg lg:text-xl font-semibold
+              text-left lg:text-center
+              w-full lg:w-auto
+              lg:ml-56 xl:ml-0 mt-24 -mb-16
+              lg:flex-1
+              text-[#1F2937]
+            "
+          >
+          Welcome to  {currentTitle}
+          </h1>
     <div className="flex justify-start p-4 ml-64 pt-10 relative">
       <div className="w-full max-w-5xl mt-10">
         <div className="overflow-x-auto">
@@ -632,5 +658,6 @@ export default function UserList() {
         </div>
       )}
     </div>
+    </>
   );
 }

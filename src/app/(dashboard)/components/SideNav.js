@@ -54,7 +54,7 @@ const SideNav = () => {
         "& .MuiDrawer-paper": {
           width: 250,
           boxSizing: "border-box",
-          bgcolor: "#F7F3FC",
+          bgcolor: "#1E293B",
         },
       }}
     >
@@ -95,9 +95,18 @@ const SideNav = () => {
           <ListItem key={index} disablePadding>
             {/* Wrap only ListItemButton inside Link without using component="a" */}
             <Link href={item.link} passHref legacyBehavior>
-              <ListItemButton>
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
+              <ListItemButton  sx={{
+    "&:hover": {
+      backgroundColor: "#0f172a", // darker shade on hover
+    },
+  }}
+>
+                <ListItemIcon>
+                  <Box sx={{ color: "#3B82F6" }}>
+                    {item.icon}
+                  </Box>
+                </ListItemIcon>
+                <ListItemText className="text-[#FFFFFF]" primary={item.text} />
               </ListItemButton>
             </Link>
           </ListItem>

@@ -5,7 +5,20 @@ import { motion } from "framer-motion";
 import { db } from "../../../../script/firebaseConfig";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 
+import { usePathname } from "next/navigation";
+
+const pathTitleMap = {
+  "/main": "Dashboard",
+  "/adminhistory": "Admin History",
+  "/transactionhistory": "Transaction List",
+  "/contractlist": "Contract List",
+  "/servicelist": "Service List",
+  "/notifications": "Notifications",
+};
+
 const AdminHistoryPage = () => {
+   const pathname = usePathname(); // ✅ Correct: inside component
+    const currentTitle = pathTitleMap[pathname] || "Admin Dashboard";
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState({
@@ -158,7 +171,18 @@ const AdminHistoryPage = () => {
 
   return (
     <div className="w-full mt-4 p-4 bg-white shadow-md rounded-lg overflow-x-auto max-w-[83%] mx-auto lg:ml-[250px]">
-      <h2 className="text-lg font-bold mb-4">Admin History</h2>
+      <h1
+            className="
+              text-base md:text-lg lg:text-xl font-semibold
+              text-left lg:text-center
+              w-full lg:w-auto
+              lg:ml-8 xl:ml-0 mt-16 mb-4
+              lg:flex-1
+              text-[#1F2937]
+            "
+          >
+          Welcome to  {currentTitle}
+          </h1>
 
       <table className="w-full mx-auto border-collapse border border-gray-300 text-sm lg:text-base">
         <thead>

@@ -6,7 +6,20 @@ import { getAuth } from 'firebase/auth';
 import { motion } from "framer-motion";
 import axios from 'axios'; // Import axios for HTTP requests
 
+import { usePathname } from "next/navigation";
+
+const pathTitleMap = {
+  "/main": "Dashboard",
+  "/adminhistory": "Admin History",
+  "/transactionhistory": "Transaction List",
+  "/contractlist": "Contract List",
+  "/servicelist": "Service List",
+  "/notifications": "Notifications",
+};
+
 const Notifications = () => {
+  const pathname = usePathname(); // ✅ Correct: inside component
+    const currentTitle = pathTitleMap[pathname] || "Admin Dashboard";
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [users, setUsers] = useState("");
@@ -17,7 +30,6 @@ const Notifications = () => {
   const [selectedUsers, setSelectedUsers] = useState([]); // Store selected users
   const [selectAll, setSelectAll] = useState(false); // Track "Select All" state
   const [searchQuery, setSearchQuery] = useState(''); // Track search input
- 
   const [loading, setLoading] = useState(true);
 
 
@@ -114,6 +126,7 @@ const Notifications = () => {
   useEffect(() => {
     // Fetching users from Firestore when the modal is opened
     if (isModalOpen) {
+      setSearchQuery("");
       const fetchUsers = async () => {
         setIsLoading(true); // Set loading to true when fetching starts
         setError(null); // Reset error state
@@ -260,7 +273,20 @@ const Notifications = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4 sm:px-6 mt-7 ml-[250px]">
+    <>
+    <h1
+            className="
+              text-base md:text-lg lg:text-xl font-semibold
+              text-left lg:text-center
+              w-full lg:w-auto
+              lg:ml-56 xl:ml-0 mt-22 -mb-16
+              lg:flex-1
+              text-[#1F2937]
+            "
+          >
+          Welcome to  {currentTitle}
+          </h1>
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4 sm:px-6 mt-5 ml-[250px]">
       <div className="border-4 border-blue-500 rounded-xl p-8 w-full max-w-md bg-white shadow-md flex flex-col mt-20">
         <h2 className="text-2xl font-semibold mb-6 text-center">
           Send Notification
@@ -418,6 +444,7 @@ const Notifications = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

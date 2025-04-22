@@ -17,7 +17,20 @@ import {
 } from "firebase/firestore";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
+import { usePathname } from "next/navigation";
+
+const pathTitleMap = {
+  "/main": "Dashboard",
+  "/adminhistory": "Admin History",
+  "/transactionhistory": "Transaction List",
+  "/contractlist": "Contract List",
+  "/servicelist": "Service List",
+  "/notifications": "Notifications",
+};
+
 const UserTable = ({ adminId }) => {
+  const pathname = usePathname(); // ✅ Correct: inside component
+  const currentTitle = pathTitleMap[pathname] || "Admin Dashboard";
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -540,20 +553,32 @@ const UserTable = ({ adminId }) => {
   }
 
   return (
-    <div className="w-full mt-4 p-4 bg-white shadow-md rounded-lg overflow-x-auto">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">User List</h2>
-
+    <>
+    <h1
+            className="
+              text-base md:text-lg lg:text-xl font-semibold
+              text-left lg:text-center
+              w-full lg:w-auto
+              lg:ml-11 xl:ml-0 mt-16 -mb-16
+              lg:flex-1
+              text-[#1F2937]
+            "
+          >
+          Welcome to  {currentTitle}
+          </h1>
+          
+    <div className="overflow-x-auto mt-20">
       <input
         type="text"
         placeholder="Search by Firstname or Lastname"
-        className="w-full p-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="w-full p-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-400"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      <table className="min-w-full bg-white border border-gray-300 text-sm text-center table-fixed">
-        <thead>
-          <tr className="bg-gray-100 border-b text-gray-700">
+      <table className="min-w-full text-sm text-gray-800">
+        <thead className="bg-gray-100 text-xs uppercase tracking-wide text-gray-600">
+          <tr>
             <th className="border p-2 w-[120px]">Lastname</th>
             <th className="border p-2 w-[120px]">Firstname</th>
             <th className="border p-2">Email Address</th>
@@ -872,8 +897,8 @@ const UserTable = ({ adminId }) => {
       )}
 
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-auto">
+        <div className="fixed inset-0 bg-black/70 bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[30%] max-h-[80vh] overflow-auto ml-60">
             <p>{modalMessage}</p>
             <div className="mt-4 space-x-4">
               <button
@@ -893,6 +918,7 @@ const UserTable = ({ adminId }) => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

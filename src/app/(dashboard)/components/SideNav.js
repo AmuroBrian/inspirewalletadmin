@@ -30,10 +30,18 @@ const SideNav = () => {
   const menuItems = [
     { text: "Users", icon: <PersonIcon />, link: "/main" },
     { text: "Admin History", icon: <HistoryIcon />, link: "/adminhistory" },
-    { text: "Transaction List", icon: <ReceiptIcon />, link: "/transactionhistory" },
+    {
+      text: "Transaction List",
+      icon: <ReceiptIcon />,
+      link: "/transactionhistory",
+    },
     { text: "Contract List", icon: <DescriptionIcon />, link: "/contractlist" },
     //{ text: "Service List", icon: <ListIcon />, link: "/servicelist" },
-    { text: "Notifications", icon: <NotificationsIcon />, link: "/notifications" },
+    {
+      text: "Notifications",
+      icon: <NotificationsIcon />,
+      link: "/notifications",
+    },
   ];
 
   return (
@@ -50,7 +58,14 @@ const SideNav = () => {
         },
       }}
     >
-      <Box sx={{ overflow: "auto", padding: 2, textAlign: "center", marginBottom: "-16%" }}>
+      <Box
+        sx={{
+          overflow: "auto",
+          padding: 2,
+          textAlign: "center",
+          marginBottom: "-16%",
+        }}
+      >
         {/* Box that will hold the logo like an ID photo with a white margin */}
         <Box
           sx={{
@@ -72,22 +87,22 @@ const SideNav = () => {
           />
         </Box>
       </Box>
-        <List>
-          <ListItem>
-            <ListItemText primary=" " sx={{ fontWeight: "bold" }} />
+      <List>
+        <ListItem>
+          <ListItemText primary=" " sx={{ fontWeight: "bold" }} />
+        </ListItem>
+        {menuItems.map((item, index) => (
+          <ListItem key={index} disablePadding>
+            {/* Wrap only ListItemButton inside Link without using component="a" */}
+            <Link href={item.link} passHref legacyBehavior>
+              <ListItemButton>
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </Link>
           </ListItem>
-          {menuItems.map((item, index) => (
-            <ListItem key={index} disablePadding>
-              {/* Wrap only ListItemButton inside Link without using component="a" */}
-              <Link href={item.link} passHref legacyBehavior>
-                <ListItemButton>
-                  <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </Link>
-            </ListItem>
-          ))}
-        </List>
+        ))}
+      </List>
     </Drawer>
   );
 };

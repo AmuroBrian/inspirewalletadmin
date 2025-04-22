@@ -75,10 +75,10 @@ const UserTable = ({ adminId }) => {
   useEffect(() => {
     const fetchBalance = async () => {
       if (!selectedUser || !selectedWithdrawType) return;
-  
+
       const userRef = doc(db, "users", selectedUser.id);
       const docSnap = await getDoc(userRef);
-  
+
       if (docSnap.exists()) {
         const data = docSnap.data();
         const balance =
@@ -88,11 +88,10 @@ const UserTable = ({ adminId }) => {
         setRemainingBalance(balance ?? 0);
       }
     };
-  
+
     fetchBalance();
   }, [selectedWithdrawType, selectedUser]);
-  
-  
+
   const updateUserStatus = async (userId, field, newValue) => {
     try {
       // ✅ Retrieve adminId and sessionId from localStorage
@@ -232,43 +231,43 @@ const UserTable = ({ adminId }) => {
     }
   };
 
-const openWithdrawModal = async (user, type) => {
-  setSelectedUser(user);
-  setIsWithdrawModalOpen(true);
-  setSelectedWithdrawType(type);
+  const openWithdrawModal = async (user, type) => {
+    setSelectedUser(user);
+    setIsWithdrawModalOpen(true);
+    setSelectedWithdrawType(type);
 
-  const userRef = doc(db, "users", user.id);
-  const docSnap = await getDoc(userRef);
+    const userRef = doc(db, "users", user.id);
+    const docSnap = await getDoc(userRef);
 
-  if (docSnap.exists()) {
-    const data = docSnap.data();
+    if (docSnap.exists()) {
+      const data = docSnap.data();
 
-    // Determine which balance to show
-    const balance =
-      type === "agent" ? data.agentWalletAmount : data.availBalanceAmount;
+      // Determine which balance to show
+      const balance =
+        type === "agent" ? data.agentWalletAmount : data.availBalanceAmount;
 
-    setRemainingBalance(balance ?? 0); // Ensure it sets a number
-  } else {
-    console.error("User not found.");
-    setRemainingBalance(0); // Avoid leaving it undefined
-  }
-};
+      setRemainingBalance(balance ?? 0); // Ensure it sets a number
+    } else {
+      console.error("User not found.");
+      setRemainingBalance(0); // Avoid leaving it undefined
+    }
+  };
 
-  
   const handleWithdrawTypeSelect = async (type) => {
     setWithdrawType(type);
     setIsWithdrawModalOpen(false);
     setIsDetailsModalOpen(true);
-  
+
     if (!selectedUser) return;
-  
+
     try {
       const userRef = doc(db, "users", selectedUser.id); // or .uid if that’s what your user object uses
       const docSnap = await getDoc(userRef);
-  
+
       if (docSnap.exists()) {
         const data = docSnap.data();
-        const balance = type === "agent" ? data.agentWalletAmount : data.availBalanceAmount;
+        const balance =
+          type === "agent" ? data.agentWalletAmount : data.availBalanceAmount;
         setRemainingBalance(balance ?? 0);
       } else {
         console.error("User not found");
@@ -279,83 +278,81 @@ const openWithdrawModal = async (user, type) => {
       setRemainingBalance(0);
     }
   };
-  
+
   const handleConfirm = async () => {
     const amountToWithdraw = Number(withdrawAmount);
-  
+
     if (isNaN(amountToWithdraw) || amountToWithdraw <= 0) {
       window.alert("Please enter a valid withdrawal amount greater than 0.");
       return;
     }
-  
+
     if (!selectedUser || !selectedWithdrawType) return;
-  
+
     try {
       const userRef = doc(db, "users", selectedUser.id);
       const docSnap = await getDoc(userRef);
-  
+
       if (!docSnap.exists()) {
         console.error("User not found for withdrawal");
         return;
       }
-  
+
       const data = docSnap.data();
       const currentBalance =
         selectedWithdrawType === "agent"
           ? data.agentWalletAmount
           : data.availBalanceAmount;
-  
+
       if (amountToWithdraw > currentBalance) {
         window.alert("Withdrawal amount exceeds available balance.");
         setWithdrawAmount("");
         return;
       }
-  
+
       const newBalance = currentBalance - amountToWithdraw;
-  
+
       // Update Firestore
       await updateDoc(userRef, {
         [selectedWithdrawType === "agent"
           ? "agentWalletAmount"
           : "availBalanceAmount"]: newBalance,
       });
-  
+
       console.log(
         `✅ Updated ${
-          selectedWithdrawType === "agent" ? "agentWalletAmount" : "availBalanceAmount"
+          selectedWithdrawType === "agent"
+            ? "agentWalletAmount"
+            : "availBalanceAmount"
         } to ₱${newBalance}`
       );
-  
+
       // Reset state
       setWithdrawAmount("");
       setSelectedWithdrawType("");
       setIsDetailsModalOpen(false);
       setRemainingBalance(newBalance); // Update local UI too
-  
+
       // ✅ Refresh editingUser with updated data
       const updatedUser = await fetchUserDetails(selectedUser.id);
       setEditingUser(updatedUser); // This will refresh the modal content
-  
     } catch (error) {
       console.error("❌ Error processing withdrawal:", error);
     }
   };
-  
-  
+
   const fetchUserDetails = async (userId) => {
     const userRef = doc(db, "users", userId);
     const docSnap = await getDoc(userRef);
     return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
   };
-  
-  
+
   const handleCancel = () => {
     setWithdrawAmount("");
     setSelectedWithdrawType("");
     setIsDetailsModalOpen(false);
-
   };
-  
+
   const openEditModal = (user) => {
     console.log("Editing User Data:", user); // Check if user data is correct
     setEditingUser(user);
@@ -544,19 +541,19 @@ const openWithdrawModal = async (user, type) => {
 
   return (
     <div className="w-full mt-4 p-4 bg-white shadow-md rounded-lg overflow-x-auto">
-      <h2 className="text-lg font-bold mb-4">User List</h2>
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">User List</h2>
 
       <input
         type="text"
         placeholder="Search by Firstname or Lastname"
-        className="w-full p-2 mb-4 border border-gray-300 rounded"
+        className="w-full p-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
 
       <table className="min-w-full bg-white border border-gray-300 text-sm text-center table-fixed">
         <thead>
-          <tr className="bg-gray-200 border-b">
+          <tr className="bg-gray-100 border-b text-gray-700">
             <th className="border p-2 w-[120px]">Lastname</th>
             <th className="border p-2 w-[120px]">Firstname</th>
             <th className="border p-2">Email Address</th>
@@ -569,10 +566,10 @@ const openWithdrawModal = async (user, type) => {
         </thead>
         <tbody>
           {filteredUsers.map((user) => (
-            <tr key={user.id} className="text-center">
+            <tr key={user.id} className="hover:bg-gray-50 text-center">
               <td className="border p-2">{user.lastName}</td>
               <td className="border p-2">{user.firstName}</td>
-              <td className="border p-2">{user.emailAddress || '"Missing"'}</td>
+              <td className="border p-2">{user.emailAddress || <span className="italic text-red-400">"Missing"</span>}</td>
               <td className="border p-2">
                 {user.createdAt?.toDate
                   ? user.createdAt.toDate().toLocaleDateString("en-US", {
@@ -580,7 +577,7 @@ const openWithdrawModal = async (user, type) => {
                       month: "long",
                       day: "numeric",
                     })
-                  : "N/A"}
+                  : <span className="italic text-red-400">N/A</span>}
               </td>
 
               <td className="border p-2">
@@ -619,16 +616,16 @@ const openWithdrawModal = async (user, type) => {
                   <option value="No">No</option>
                 </select>
               </td>
-              <td className="border p-2">
+              <td className="border p-2 space-x-2">
                 <button
-                  className="p-1 text-blue-500"
+                  className="p-1 text-blue-600 hover:text-blue-800 transition"
                   onClick={() => openEditModal(user)}
                 >
                   <PencilSquareIcon className="w-5 h-5 inline" />
                 </button>
 
                 <button
-                  className="p-1 text-red-500"
+                  className="p-1 text-red-600 hover:text-red-800 transition"
                   onClick={() => confirmDeleteUser(user.id)}
                 >
                   <TrashIcon className="w-5 h-5 inline" />
@@ -642,10 +639,10 @@ const openWithdrawModal = async (user, type) => {
       {isModalOpen && editingUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-50 ml-56 mt-16">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-auto">
-            <h3 className="text-xl font-bold mb-4">Edit User</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Edit User</h3>
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className=" text-black">First Name: </span>
+              <span className=" text-gray-700 capitalize">First Name: </span>
               {isEditing ? (
                 <input
                   type="text"
@@ -731,19 +728,18 @@ const openWithdrawModal = async (user, type) => {
             </div>
 
             <div className="flex justify-end mt-4 space-x-3">
-            <button
-  className={`px-4 py-2 rounded ${
-    isEditing ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500"
-  } text-white`}
-  onClick={() => {
-    setSelectedUser(editingUser); // ✅ this is defined
-    setIsWithdrawModalOpen(true);
-  }}
-  disabled={isEditing}
->
-  Withdraw
-</button>
-
+              <button
+                className={`px-4 py-2 rounded ${
+                  isEditing ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500"
+                } text-white`}
+                onClick={() => {
+                  setSelectedUser(editingUser); // ✅ this is defined
+                  setIsWithdrawModalOpen(true);
+                }}
+                disabled={isEditing}
+              >
+                Withdraw
+              </button>
 
               {isEditing ? (
                 <button
@@ -794,7 +790,6 @@ const openWithdrawModal = async (user, type) => {
                   setIsWithdrawModalOpen(false);
                   setIsDetailsModalOpen(true);
                 }}
-                
               >
                 Agent Withdrawal
               </button>
@@ -807,7 +802,6 @@ const openWithdrawModal = async (user, type) => {
                   setIsWithdrawModalOpen(false);
                   setIsDetailsModalOpen(true);
                 }}
-                
               >
                 Balance Withdrawal
               </button>

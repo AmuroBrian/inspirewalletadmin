@@ -138,7 +138,7 @@ const AdminHistoryPage = () => {
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="w-20 h-20 rounded-full bg-white shadow-lg flex justify-center items-center overflow-hidden border-2 border-gray-300 ml-10"
+          className="w-20 h-20 rounded-full bg-white shadow-lg flex justify-center items-center overflow-hidden border-2 border-gray-300 ml-56"
         >
           <img
             src="/images/logo.png" // Change this to the actual logo path
@@ -148,8 +148,8 @@ const AdminHistoryPage = () => {
         </motion.div>
 
         {/* Surface */}
-        <div className="w-24 h-2 bg-gray-700 rounded-md mt-2 shadow-md relative z-10 ml-10" />
-        <p className="mt-2 text-gray-700 font-semibold text-lg ml-10">
+        <div className="w-24 h-2 bg-gray-700 rounded-md mt-2 shadow-md relative z-10 ml-56" />
+        <p className="mt-2 text-gray-700 font-semibold text-lg ml-56">
           Loading...
         </p>
       </div>

@@ -241,7 +241,7 @@ const Notifications = () => {
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="w-20 h-20 rounded-full bg-white shadow-lg flex justify-center items-center overflow-hidden border-2 border-gray-300 ml-10"
+          className="w-20 h-20 rounded-full bg-white shadow-lg flex justify-center items-center overflow-hidden border-2 border-gray-300 ml-56"
         >
           <img
             src="/images/logo.png" // Change this to the actual logo path
@@ -251,8 +251,8 @@ const Notifications = () => {
         </motion.div>
 
         {/* Surface */}
-        <div className="w-24 h-2 bg-gray-700 rounded-md mt-2 shadow-md relative z-10 ml-10" />
-        <p className="mt-2 text-gray-700 font-semibold text-lg ml-10">
+        <div className="w-24 h-2 bg-gray-700 rounded-md mt-2 shadow-md relative z-10 ml-56" />
+        <p className="mt-2 text-gray-700 font-semibold text-lg ml-56">
           Loading...
         </p>
       </div>
@@ -261,7 +261,7 @@ const Notifications = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4 sm:px-6 mt-7 ml-[250px]">
-      <div className="border-4 border-blue-500 rounded-xl p-8 w-full max-w-md bg-white shadow-md flex flex-col">
+      <div className="border-4 border-blue-500 rounded-xl p-8 w-full max-w-md bg-white shadow-md flex flex-col mt-20">
         <h2 className="text-2xl font-semibold mb-6 text-center">
           Send Notification
         </h2>
@@ -412,9 +412,9 @@ const Notifications = () => {
           >
             Clear
           </button>
-          <button className="flex-1 bg-gray-400 text-white py-2 rounded-md hover:bg-gray-500 transition">
+          {/* <button className="flex-1 bg-gray-400 text-white py-2 rounded-md hover:bg-gray-500 transition">
             Cancel
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

@@ -109,8 +109,6 @@ const TopNav = () => {
     "/notifications": "Notifications",
   };
 
-  const pathname = usePathname();
-  const currentTitle = pathTitleMap[pathname] || "Admin Dashboard";
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -120,24 +118,12 @@ const TopNav = () => {
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full bg-purple-100 shadow-md z-10 p-4 flex justify-between">
-      <div className="ml-[250px] px-4 sm:px-8 md:px-12 lg:px-16 xl:px-24 mt-4 w-[calc(100%-250px)]">
+    <div className="fixed top-0 left-0 w-full bg-[#FFFFFF] shadow-md z-10 p-4 flex justify-between">
+      <div className="ml-[180px] px-4 sm:px-8 md:px-12 lg:px-16 xl:px-24 mt-1.5 w-[calc(100%-250px)]">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-2">
           <span className="text-gray-800 font-semibold text-base md:text-lg lg:text-xl text-left w-full lg:w-auto">
             {`${getGreeting()}, ${fullName}`}
           </span>
-
-          <h1
-            className="
-    text-base md:text-lg lg:text-xl font-semibold
-    text-left lg:text-center
-    w-full lg:w-auto
-    lg:ml-8 xl:ml-0
-    lg:flex-1
-  "
-          >
-            {currentTitle}
-          </h1>
         </div>
       </div>
 

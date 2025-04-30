@@ -7,10 +7,10 @@ export default function TransactionTable({
   openTransactionModal,
 }) {
   const filteredUsers = users.filter((user) =>
-    `${user.firstName} ${user.lastName}`
+    `${user?.firstName || ""} ${user?.lastName || ""}`
       .toLowerCase()
       .includes(search.toLowerCase())
-  );
+  );  
 
   return (
     <div className="w-full max-w-5xl mt-10">

@@ -393,8 +393,8 @@ export default function TransactionList() {
 
   const filteredUsers = users.filter(
     (user) =>
-      user.firstName.toLowerCase().includes(search.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(search.toLowerCase())
+      user?.firstName?.toLowerCase().includes((search || "").toLowerCase()) ||
+      user?.lastName?.toLowerCase().includes((search || "").toLowerCase())
   );
 
   // **Loading Screen**

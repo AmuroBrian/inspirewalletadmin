@@ -139,57 +139,57 @@ export default function AuthForm() {
   const [allowed, setAllowed] = useState(false);
 
   //You can also visit this website to know your accurate IP Address: https://whatismyipaddress.com/#google_vignette
-  useEffect(() => {
-    const getLocalIP = async () => {
-      console.log("📡 Attempting to get local IP...");
-      const pc = new RTCPeerConnection({ iceServers: [] });
-      pc.createDataChannel(""); // create bogus channel
+  // useEffect(() => {
+  //   const getLocalIP = async () => {
+  //     console.log("📡 Attempting to get local IP...");
+  //     const pc = new RTCPeerConnection({ iceServers: [] });
+  //     pc.createDataChannel(""); // create bogus channel
 
-      pc.createOffer().then((offer) => pc.setLocalDescription(offer));
+  //     pc.createOffer().then((offer) => pc.setLocalDescription(offer));
 
-      pc.onicecandidate = (event) => {
-        if (!event || !event.candidate) return;
+  //     pc.onicecandidate = (event) => {
+  //       if (!event || !event.candidate) return;
 
-        const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3})/;
-        const ipMatch = ipRegex.exec(event.candidate.candidate);
-        if (ipMatch) {
-          console.log("📡 Local WiFi IP Address:", ipMatch[1]);
-        }
+  //       const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3})/;
+  //       const ipMatch = ipRegex.exec(event.candidate.candidate);
+  //       if (ipMatch) {
+  //         console.log("📡 Local WiFi IP Address:", ipMatch[1]);
+  //       }
 
-        pc.onicecandidate = null;
-        pc.close();
-      };
-    };
+  //       pc.onicecandidate = null;
+  //       pc.close();
+  //     };
+  //   };
 
-    const getPublicIP = async () => {
-      try {
-        const res = await fetch("https://api64.ipify.org?format=json");
-        const data = await res.json();
-        console.log("🌍 Public IP Address:", data.ip);
-        setUserIp(data.ip);
+  //   const getPublicIP = async () => {
+  //     try {
+  //       const res = await fetch("https://api64.ipify.org?format=json");
+  //       const data = await res.json();
+  //       console.log("🌍 Public IP Address:", data.ip);
+  //       setUserIp(data.ip);
 
-        const allowedIp = "61.28.197.253";
-        if (data.ip === allowedIp) {
-          console.log("✅ Access granted. IP matched.");
-        } else {
-          alert("❌ Access denied. Your IP address is not allowed to access this site.");
-          console.warn("❌ Access denied. IP did not match.");
-          router.push("/denied");
-        }
-      } catch (err) {
-        console.error("IP Fetch failed:", err);
-        alert("❌ Unable to verify your IP address. Redirecting to denied page.");
-        router.push("/denied");
-      }
-    };
+  //       const allowedIp = "61.28.197.253";
+  //       if (data.ip === allowedIp) {
+  //         console.log("✅ Access granted. IP matched.");
+  //       } else {
+  //         alert("❌ Access denied. Your IP address is not allowed to access this site.");
+  //         console.warn("❌ Access denied. IP did not match.");
+  //         router.push("/denied");
+  //       }
+  //     } catch (err) {
+  //       console.error("IP Fetch failed:", err);
+  //       alert("❌ Unable to verify your IP address. Redirecting to denied page.");
+  //       router.push("/denied");
+  //     }
+  //   };
 
-    getLocalIP();
-    getPublicIP();
-  }, [router]);
+  //   getLocalIP();
+  //   getPublicIP();
+  // }, [router]);
 
-  if (allowed === null) {
-    return <main className="text-center mt-10 text-gray-500">Checking Wi-Fi access...</main>;
-  }
+  // if (allowed === null) {
+  //   return <main className="text-center mt-10 text-gray-500">Checking Wi-Fi access...</main>;
+  // }
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-200 overflow-hidden pt-0">

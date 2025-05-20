@@ -333,10 +333,9 @@ const UserTable = ({ adminId }) => {
       });
 
       console.log(
-        `✅ Updated ${
-          selectedWithdrawType === "agent"
-            ? "agentWalletAmount"
-            : "availBalanceAmount"
+        `✅ Updated ${selectedWithdrawType === "agent"
+          ? "agentWalletAmount"
+          : "availBalanceAmount"
         } to ₱${newBalance}`
       );
 
@@ -510,8 +509,8 @@ const UserTable = ({ adminId }) => {
 
   const filteredUsers = users.filter(
     (user) =>
-      user.firstName.toLowerCase().includes(search.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(search.toLowerCase())
+      (user?.firstName?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      (user?.lastName?.toLowerCase() || '').includes(search.toLowerCase())
   );
 
   // **Loading Screen**
@@ -554,8 +553,8 @@ const UserTable = ({ adminId }) => {
 
   return (
     <>
-    <h1
-            className="
+      <h1
+        className="
               text-base md:text-lg lg:text-xl font-semibold
               text-left lg:text-center
               w-full lg:w-auto
@@ -563,361 +562,360 @@ const UserTable = ({ adminId }) => {
               lg:flex-1
               text-[#1F2937]
             "
-          >
-          Welcome to  {currentTitle}
-          </h1>
-          
-    <div className="overflow-x-auto mt-20">
-      <input
-        type="text"
-        placeholder="Search by Firstname or Lastname"
-        className="w-full p-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-400"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      >
+        Welcome to  {currentTitle}
+      </h1>
 
-      <table className="min-w-full text-sm text-gray-800">
-        <thead className="bg-gray-100 text-xs uppercase tracking-wide text-gray-600">
-          <tr>
-            <th className="border p-2 w-[120px]">Lastname</th>
-            <th className="border p-2 w-[120px]">Firstname</th>
-            <th className="border p-2">Email Address</th>
-            <th className="border p-2 w-[100px]">Date Created</th>
-            <th className="border p-2">Agent</th>
-            <th className="border p-2">Investor</th>
-            <th className="border p-2">Stockholder</th>
-            <th className="border p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredUsers.map((user) => (
-            <tr key={user.id} className="hover:bg-gray-50 text-center">
-              <td className="border p-2">{user.lastName}</td>
-              <td className="border p-2">{user.firstName}</td>
-              <td className="border p-2">{user.emailAddress || <span className="italic text-red-400">"Missing"</span>}</td>
-              <td className="border p-2">
-                {user.createdAt?.toDate
-                  ? user.createdAt.toDate().toLocaleDateString("en-US", {
+      <div className="overflow-x-auto mt-20">
+        <input
+          type="text"
+          placeholder="Search by Firstname or Lastname"
+          className="w-full p-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-400"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        <table className="min-w-full text-sm text-gray-800">
+          <thead className="bg-gray-100 text-xs uppercase tracking-wide text-gray-600">
+            <tr>
+              <th className="border p-2 w-[120px]">Lastname</th>
+              <th className="border p-2 w-[120px]">Firstname</th>
+              <th className="border p-2">Email Address</th>
+              <th className="border p-2 w-[100px]">Date Created</th>
+              <th className="border p-2">Agent</th>
+              <th className="border p-2">Investor</th>
+              <th className="border p-2">Stockholder</th>
+              <th className="border p-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredUsers.map((user) => (
+              <tr key={user.id} className="hover:bg-gray-50 text-center">
+                <td className="border p-2">{user.lastName}</td>
+                <td className="border p-2">{user.firstName}</td>
+                <td className="border p-2">{user.emailAddress || <span className="italic text-red-400">"Missing"</span>}</td>
+                <td className="border p-2">
+                  {user.createdAt?.toDate
+                    ? user.createdAt.toDate().toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
                     })
-                  : <span className="italic text-red-400">N/A</span>}
-              </td>
+                    : <span className="italic text-red-400">N/A</span>}
+                </td>
 
-              <td className="border p-2">
-                <select
-                  className="border p-1 rounded"
-                  value={user.agent}
-                  onChange={(e) =>
-                    updateUserStatus(user.id, "agent", e.target.value)
-                  }
-                >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </td>
-              <td className="border p-2">
-                <select
-                  className="border p-1 rounded"
-                  value={user.investor}
-                  onChange={(e) =>
-                    updateUserStatus(user.id, "investor", e.target.value)
-                  }
-                >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </td>
-              <td className="border p-2">
-                <select
-                  className="border p-1 rounded"
-                  value={user.stock}
-                  onChange={(e) =>
-                    updateUserStatus(user.id, "stock", e.target.value)
-                  }
-                >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </td>
-              <td className="border p-2 space-x-2">
-                <button
-                  className="p-1 text-blue-600 hover:text-blue-800 transition"
-                  onClick={() => openEditModal(user)}
-                >
-                  <PencilSquareIcon className="w-5 h-5 inline" />
-                </button>
+                <td className="border p-2">
+                  <select
+                    className="border p-1 rounded"
+                    value={user.agent}
+                    onChange={(e) =>
+                      updateUserStatus(user.id, "agent", e.target.value)
+                    }
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </td>
+                <td className="border p-2">
+                  <select
+                    className="border p-1 rounded"
+                    value={user.investor}
+                    onChange={(e) =>
+                      updateUserStatus(user.id, "investor", e.target.value)
+                    }
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </td>
+                <td className="border p-2">
+                  <select
+                    className="border p-1 rounded"
+                    value={user.stock}
+                    onChange={(e) =>
+                      updateUserStatus(user.id, "stock", e.target.value)
+                    }
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </td>
+                <td className="border p-2 space-x-2">
+                  <button
+                    className="p-1 text-blue-600 hover:text-blue-800 transition"
+                    onClick={() => openEditModal(user)}
+                  >
+                    <PencilSquareIcon className="w-5 h-5 inline" />
+                  </button>
 
-                <button
-                  className="p-1 text-red-600 hover:text-red-800 transition"
-                  onClick={() => confirmDeleteUser(user.id)}
-                >
-                  <TrashIcon className="w-5 h-5 inline" />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                  <button
+                    className="p-1 text-red-600 hover:text-red-800 transition"
+                    onClick={() => confirmDeleteUser(user.id)}
+                  >
+                    <TrashIcon className="w-5 h-5 inline" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      {isModalOpen && editingUser && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-50 ml-56 mt-16">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-auto">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Edit User</h3>
+        {isModalOpen && editingUser && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-50 ml-56 mt-16">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-auto">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Edit User</h3>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <span className=" text-gray-700 capitalize">First Name: </span>
-              {isEditing ? (
-                <input
-                  type="text"
-                  name="firstName"
-                  value={editingUser?.firstName || ""}
-                  onChange={(e) =>
-                    setEditingUser({
-                      ...editingUser,
-                      firstName: e.target.value,
-                    })
-                  }
-                  className="border rounded-md border-gray-300 w-40"
-                />
-              ) : (
-                <span className=" text-black">{editingUser.firstName}</span>
-              )}
-            </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className=" text-gray-700 capitalize">First Name: </span>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={editingUser?.firstName || ""}
+                    onChange={(e) =>
+                      setEditingUser({
+                        ...editingUser,
+                        firstName: e.target.value,
+                      })
+                    }
+                    className="border rounded-md border-gray-300 w-40"
+                  />
+                ) : (
+                  <span className=" text-black">{editingUser.firstName}</span>
+                )}
+              </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <span className=" text-black">Last Name: </span>
-              {isEditing ? (
-                <input
-                  type="text"
-                  name="lastName"
-                  value={editingUser?.lastName || ""}
-                  onChange={(e) =>
-                    setEditingUser({ ...editingUser, lastName: e.target.value })
-                  }
-                  className="border rounded-md border-gray-300 w-40"
-                />
-              ) : (
-                <span className=" text-black">{editingUser.lastName}</span>
-              )}
-            </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className=" text-black">Last Name: </span>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={editingUser?.lastName || ""}
+                    onChange={(e) =>
+                      setEditingUser({ ...editingUser, lastName: e.target.value })
+                    }
+                    className="border rounded-md border-gray-300 w-40"
+                  />
+                ) : (
+                  <span className=" text-black">{editingUser.lastName}</span>
+                )}
+              </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-black">Email Address:</span>
-              <span className="text-black">
-                {editingUser?.emailAddress || "N/A"}
-              </span>
-            </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-black">Email Address:</span>
+                <span className="text-black">
+                  {editingUser?.emailAddress || "N/A"}
+                </span>
+              </div>
 
-            <hr className="my-4" />
-            <p className="text-md font-semibold">Financial Details:</p>
-            {/* Numeric Fields */}
+              <hr className="my-4" />
+              <p className="text-md font-semibold">Financial Details:</p>
+              {/* Numeric Fields */}
 
-            <div className="grid grid-cols-1 gap-4">
-              {[
-                { label: "Agent Wallet Amount", key: "agentWalletAmount" },
-                { label: "Available Balance", key: "availBalanceAmount" },
-                { label: "Stock Amount", key: "stockAmount" },
-                { label: "Time Deposit", key: "timeDepositAmount" },
-                { label: "USDT Amount", key: "usdtAmount" },
-                { label: "Wallet Amount", key: "walletAmount" },
-              ].map(({ label, key }) => (
-                <div key={key} className="grid grid-cols-2 items-center">
-                  {/* First column: Label */}
-                  <span className="text-sm font-medium text-black">
-                    {label}:
-                  </span>
-
-                  {/* Second column: Value/Input */}
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      name={key}
-                      value={editingUser[key] || ""}
-                      onChange={(e) =>
-                        setEditingUser({
-                          ...editingUser,
-                          [key]: e.target.value,
-                        })
-                      }
-                      className="text-sm border rounded-md p-1 border-gray-300 w-full"
-                    />
-                  ) : (
-                    <span className="text-sm text-black -ml-2">
-                      {editingUser[key]}
+              <div className="grid grid-cols-1 gap-4">
+                {[
+                  { label: "Agent Wallet Amount", key: "agentWalletAmount" },
+                  { label: "Available Balance", key: "availBalanceAmount" },
+                  { label: "Stock Amount", key: "stockAmount" },
+                  { label: "Time Deposit", key: "timeDepositAmount" },
+                  { label: "USDT Amount", key: "usdtAmount" },
+                  { label: "Wallet Amount", key: "walletAmount" },
+                ].map(({ label, key }) => (
+                  <div key={key} className="grid grid-cols-2 items-center">
+                    {/* First column: Label */}
+                    <span className="text-sm font-medium text-black">
+                      {label}:
                     </span>
-                  )}
-                </div>
-              ))}
-            </div>
 
-            <div className="flex justify-end mt-4 space-x-3">
-              <button
-                className={`px-4 py-2 rounded ${
-                  isEditing ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500"
-                } text-white`}
-                onClick={() => {
-                  setSelectedUser(editingUser); // ✅ this is defined
-                  setIsWithdrawModalOpen(true);
-                }}
-                disabled={isEditing}
-              >
-                Withdraw
-              </button>
+                    {/* Second column: Value/Input */}
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        name={key}
+                        value={editingUser[key] || ""}
+                        onChange={(e) =>
+                          setEditingUser({
+                            ...editingUser,
+                            [key]: e.target.value,
+                          })
+                        }
+                        className="text-sm border rounded-md p-1 border-gray-300 w-full"
+                      />
+                    ) : (
+                      <span className="text-sm text-black -ml-2">
+                        {editingUser[key]}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
 
-              {isEditing ? (
+              <div className="flex justify-end mt-4 space-x-3">
                 <button
-                  className="bg-green-500 text-white px-4 py-2 rounded"
-                  onClick={handleSubmit}
+                  className={`px-4 py-2 rounded ${isEditing ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500"
+                    } text-white`}
+                  onClick={() => {
+                    setSelectedUser(editingUser); // ✅ this is defined
+                    setIsWithdrawModalOpen(true);
+                  }}
+                  disabled={isEditing}
                 >
-                  Submit
+                  Withdraw
                 </button>
-              ) : (
-                <button
-                  className="bg-green-500 text-white px-4 py-2 rounded"
-                  onClick={() => setIsEditing(true)}
-                >
-                  Edit
-                </button>
-              )}
 
-              <button
-                className="bg-gray-500 text-white px-4 py-2 rounded"
-                onClick={() => {
-                  if (isEditing) {
-                    setIsEditing(false); // Exit edit mode
-                  } else {
-                    setIsEditing(false); // Reset edit mode
-                    closeModal(); // Close the modal
-                  }
-                }}
-              >
-                {isEditing ? "Cancel" : "Close"}
-              </button>
+                {isEditing ? (
+                  <button
+                    className="bg-green-500 text-white px-4 py-2 rounded"
+                    onClick={handleSubmit}
+                  >
+                    Submit
+                  </button>
+                ) : (
+                  <button
+                    className="bg-green-500 text-white px-4 py-2 rounded"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    Edit
+                  </button>
+                )}
+
+                <button
+                  className="bg-gray-500 text-white px-4 py-2 rounded"
+                  onClick={() => {
+                    if (isEditing) {
+                      setIsEditing(false); // Exit edit mode
+                    } else {
+                      setIsEditing(false); // Reset edit mode
+                      closeModal(); // Close the modal
+                    }
+                  }}
+                >
+                  {isEditing ? "Cancel" : "Close"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {isWithdrawModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
-            <h2 className="text-lg font-semibold mb-4">
-              Select Withdrawal Type
-            </h2>
-            <div className="flex justify-between gap-4">
+        {isWithdrawModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
+              <h2 className="text-lg font-semibold mb-4">
+                Select Withdrawal Type
+              </h2>
+              <div className="flex justify-between gap-4">
+                <button
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full"
+                  onClick={() => {
+                    handleWithdrawTypeSelect("agent");
+                    openWithdrawModal(selectedUser, "agent"); // 👈 fetches balance
+                    setIsWithdrawModalOpen(false);
+                    setIsDetailsModalOpen(true);
+                  }}
+                >
+                  Agent Withdrawal
+                </button>
+
+                <button
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full"
+                  onClick={() => {
+                    handleWithdrawTypeSelect("balance");
+                    openWithdrawModal(selectedUser, "balance"); // 👈 fetches balance
+                    setIsWithdrawModalOpen(false);
+                    setIsDetailsModalOpen(true);
+                  }}
+                >
+                  Balance Withdrawal
+                </button>
+              </div>
+
               <button
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full"
-                onClick={() => {
-                  handleWithdrawTypeSelect("agent");
-                  openWithdrawModal(selectedUser, "agent"); // 👈 fetches balance
-                  setIsWithdrawModalOpen(false);
-                  setIsDetailsModalOpen(true);
-                }}
-              >
-                Agent Withdrawal
-              </button>
-
-              <button
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full"
-                onClick={() => {
-                  handleWithdrawTypeSelect("balance");
-                  openWithdrawModal(selectedUser, "balance"); // 👈 fetches balance
-                  setIsWithdrawModalOpen(false);
-                  setIsDetailsModalOpen(true);
-                }}
-              >
-                Balance Withdrawal
-              </button>
-            </div>
-
-            <button
-              className="mt-4 text-sm text-gray-500 hover:text-gray-700 underline"
-              onClick={() => setIsWithdrawModalOpen(false)}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {isDetailsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-semibold mb-4 text-left capitalize">
-              {withdrawType} withdrawal
-            </h2>
-
-            <div className="flex justify-between text-sm mb-1">
-              <label className="font-medium text-gray-700">
-                {withdrawType === "agent"
-                  ? "Agent Withdrawal"
-                  : "Balance Withdrawal"}
-              </label>
-              <span className="text-gray-500">
-                Remaining Balance:{" "}
-                {remainingBalance !== null
-                  ? `₱${remainingBalance}`
-                  : "Loading..."}
-              </span>
-            </div>
-            <input
-              type="number"
-              min="0"
-              placeholder="Enter amount"
-              className="w-full border border-gray-300 rounded px-3 py-2 mb-6"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-            />
-
-            <div className="flex justify-center gap-4">
-              <button
-                className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleConfirm}
-                disabled={withdrawAmount < 0 || withdrawAmount === ""}
-              >
-                Confirm
-              </button>
-              <button
-                className="bg-yellow-500 text-white px-4 py-2 rounded"
-                onClick={() => setWithdrawAmount("")}
-              >
-                Clear
-              </button>
-              <button
-                className="bg-gray-500 text-white px-4 py-2 rounded"
-                onClick={handleCancel}
+                className="mt-4 text-sm text-gray-500 hover:text-gray-700 underline"
+                onClick={() => setIsWithdrawModalOpen(false)}
               >
                 Cancel
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-black/70 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-[30%] max-h-[80vh] overflow-auto ml-60">
-            <p>{modalMessage}</p>
-            <div className="mt-4 space-x-4">
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded"
-                onClick={deleteUser}
-              >
-                Confirm Delete
-              </button>
-              <button
-                className="bg-gray-500 text-white px-4 py-2 rounded"
-                onClick={closeModal}
-              >
-                Cancel
-              </button>
+        {isDetailsModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <h2 className="text-xl font-semibold mb-4 text-left capitalize">
+                {withdrawType} withdrawal
+              </h2>
+
+              <div className="flex justify-between text-sm mb-1">
+                <label className="font-medium text-gray-700">
+                  {withdrawType === "agent"
+                    ? "Agent Withdrawal"
+                    : "Balance Withdrawal"}
+                </label>
+                <span className="text-gray-500">
+                  Remaining Balance:{" "}
+                  {remainingBalance !== null
+                    ? `₱${remainingBalance}`
+                    : "Loading..."}
+                </span>
+              </div>
+              <input
+                type="number"
+                min="0"
+                placeholder="Enter amount"
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-6"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+              />
+
+              <div className="flex justify-center gap-4">
+                <button
+                  className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleConfirm}
+                  disabled={withdrawAmount < 0 || withdrawAmount === ""}
+                >
+                  Confirm
+                </button>
+                <button
+                  className="bg-yellow-500 text-white px-4 py-2 rounded"
+                  onClick={() => setWithdrawAmount("")}
+                >
+                  Clear
+                </button>
+                <button
+                  className="bg-gray-500 text-white px-4 py-2 rounded"
+                  onClick={handleCancel}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 bg-black/70 bg-opacity-50 flex justify-center items-center">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-[30%] max-h-[80vh] overflow-auto ml-60">
+              <p>{modalMessage}</p>
+              <div className="mt-4 space-x-4">
+                <button
+                  className="bg-red-500 text-white px-4 py-2 rounded"
+                  onClick={deleteUser}
+                >
+                  Confirm Delete
+                </button>
+                <button
+                  className="bg-gray-500 text-white px-4 py-2 rounded"
+                  onClick={closeModal}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 };

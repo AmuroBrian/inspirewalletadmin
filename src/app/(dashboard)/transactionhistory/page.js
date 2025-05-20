@@ -37,8 +37,8 @@ export default function TransactionList() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true); // Added loading state
   const [data, setData] = useState(null);
-   const pathname = usePathname(); // ✅ Correct: inside component
-    const currentTitle = pathTitleMap[pathname] || "Admin Dashboard";
+  const pathname = usePathname(); // ✅ Correct: inside component
+  const currentTitle = pathTitleMap[pathname] || "Admin Dashboard";
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -155,10 +155,10 @@ export default function TransactionList() {
         prev.map((trans) =>
           trans.id === editingId
             ? {
-                ...trans,
-                ...editedTransaction,
-                date: newDate,
-              }
+              ...trans,
+              ...editedTransaction,
+              date: newDate,
+            }
             : trans
         )
       );
@@ -196,9 +196,8 @@ export default function TransactionList() {
         actionLogs.push({
           actionNumber: 25,
           userId: selectedUser ?? "Unknown User",
-          description: `Updated ${transactionType} Date from: ${
-            oldDate?.toLocaleDateString() ?? "N/A"
-          } to: ${newDate.toLocaleDateString()}`,
+          description: `Updated ${transactionType} Date from: ${oldDate?.toLocaleDateString() ?? "N/A"
+            } to: ${newDate.toLocaleDateString()}`,
           oldValue: { date: oldDate?.toLocaleDateString() ?? "N/A" },
           newValue: { date: newDate.toLocaleDateString() },
           timestamp: Timestamp.now(),
@@ -213,9 +212,8 @@ export default function TransactionList() {
         actionLogs.push({
           actionNumber: 24,
           userId: selectedUser ?? "Unknown User",
-          description: `Updated ${transactionType} Amount: from ₱${
-            oldTransaction?.amount ?? "N/A"
-          } to ₱${editedTransaction.amount}`,
+          description: `Updated ${transactionType} Amount: from ₱${oldTransaction?.amount ?? "N/A"
+            } to ₱${editedTransaction.amount}`,
           oldValue: { amount: oldTransaction?.amount ?? "N/A" },
           newValue: { amount: editedTransaction.amount },
           timestamp: Timestamp.now(),
@@ -230,9 +228,8 @@ export default function TransactionList() {
         actionLogs.push({
           actionNumber: 26,
           userId: selectedUser ?? "Unknown User",
-          description: `Updated ${transactionType} Type from: ${
-            oldTransaction?.type ?? "N/A"
-          } to: ${editedTransaction.type}`,
+          description: `Updated ${transactionType} Type from: ${oldTransaction?.type ?? "N/A"
+            } to: ${editedTransaction.type}`,
           oldValue: { type: oldTransaction?.type ?? "N/A" },
           newValue: { type: editedTransaction.type },
           timestamp: Timestamp.now(),
@@ -393,8 +390,8 @@ export default function TransactionList() {
 
   const filteredUsers = users.filter(
     (user) =>
-      user.firstName.toLowerCase().includes(search.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(search.toLowerCase())
+      (user?.firstName?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      (user?.lastName?.toLowerCase() || '').includes(search.toLowerCase())
   );
 
   // **Loading Screen**
@@ -437,8 +434,8 @@ export default function TransactionList() {
 
   return (
     <>
-    <h1
-            className="
+      <h1
+        className="
               text-base md:text-lg lg:text-xl font-semibold
               text-left lg:text-center
               w-full lg:w-auto
@@ -446,253 +443,252 @@ export default function TransactionList() {
               lg:flex-1
               text-[#1F2937]
             "
-          >
-          Welcome to  {currentTitle}
-          </h1>
-    <div className="flex justify-start p-4 ml-64 pt-10 relative">
-      <div className="w-full max-w-5xl mt-10">
-        <div className="overflow-x-auto">
-          <input
-            type="text"
-            placeholder="Search by Firstname or Lastname"
-            className="w-full p-2 mb-4 border border-gray-300 rounded"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <table className="min-w-full bg-white border border-gray-200 text-center table-fixed">
-            <thead>
-              <tr className="bg-gray-100 border-b">
-                <th className="p-2 border">Name</th>
-                <th className="p-2 border">Stock</th>
-                <th className="p-2 border">Agent</th>
-                <th className="p-2 border">Transaction</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="border-b">
-                  <td className="p-2 border">
-                    {user.firstName} {user.lastName}
-                  </td>
-                  <td className="p-2 border">
-                    <button
-                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                      onClick={() =>
-                        fetchTransactions(user.id, "stockTransactions")
-                      }
-                    >
-                      Stock
-                    </button>
-                  </td>
-                  <td className="p-2 border">
-                    <button
-                      className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
-                      onClick={() =>
-                        fetchTransactions(user.id, "agentTransactions")
-                      }
-                    >
-                      Agent
-                    </button>
-                  </td>
-                  <td className="p-2 border">
-                    <button
-                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                      onClick={() => fetchTransactions(user.id, "transactions")}
-                    >
-                      Transaction
-                    </button>
-                  </td>
+      >
+        Welcome to  {currentTitle}
+      </h1>
+      <div className="flex justify-start p-4 ml-64 pt-10 relative">
+        <div className="w-full max-w-5xl mt-10">
+          <div className="overflow-x-auto">
+            <input
+              type="text"
+              placeholder="Search by Firstname or Lastname"
+              className="w-full p-2 mb-4 border border-gray-300 rounded"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <table className="min-w-full bg-white border border-gray-200 text-center table-fixed">
+              <thead>
+                <tr className="bg-gray-100 border-b">
+                  <th className="p-2 border">Name</th>
+                  <th className="p-2 border">Stock</th>
+                  <th className="p-2 border">Agent</th>
+                  <th className="p-2 border">Transaction</th>
                 </tr>
-              ))}
-              {filteredUsers.length === 0 && (
-                <tr>
-                  <td colSpan="4" className="p-4 text-gray-500">
-                    No users found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {modalType && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-lg">
-          <div className="bg-white p-4 rounded-lg w-[70%] shadow-lg border border-gray-300 relative ml-60">
-            <h2 className="text-xl font-semibold mb-4 text-center capitalize">
-              {modalType.replace("Transactions", " Transactions")}
-            </h2>
-            <button
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-              onClick={() => {
-                setModalType(null);
-                setEditingId(null); // Reset edit mode
-                setEditedTransaction({}); // Clear edited transaction
-              }}
-            >
-              ✖
-            </button>
-
-            {/* Transactions Table */}
-            <div
-              className={`overflow-x-auto ${
-                transactions.length > 3 ? "max-h-60 overflow-y-auto" : ""
-              }`}
-            >
-              <table className="min-w-full bg-white border border-gray-200 text-center">
-                <thead>
-                  <tr className="bg-gray-100 border-b">
-                    <th className="p-2 border">Amount</th>
-                    <th className="p-2 border">Date</th>
-                    <th className="p-2 border">Type</th>
-                    <th className="p-2 border">Actions</th>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="border-b">
+                    <td className="p-2 border">
+                      {user.firstName} {user.lastName}
+                    </td>
+                    <td className="p-2 border">
+                      <button
+                        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        onClick={() =>
+                          fetchTransactions(user.id, "stockTransactions")
+                        }
+                      >
+                        Stock
+                      </button>
+                    </td>
+                    <td className="p-2 border">
+                      <button
+                        className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                        onClick={() =>
+                          fetchTransactions(user.id, "agentTransactions")
+                        }
+                      >
+                        Agent
+                      </button>
+                    </td>
+                    <td className="p-2 border">
+                      <button
+                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                        onClick={() => fetchTransactions(user.id, "transactions")}
+                      >
+                        Transaction
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((transaction) => (
-                    <tr key={transaction.id} className="border-b">
-                      <td className="p-2 border">
-                        {editingId === transaction.id ? (
+                ))}
+                {filteredUsers.length === 0 && (
+                  <tr>
+                    <td colSpan="4" className="p-4 text-gray-500">
+                      No users found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {modalType && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-lg">
+            <div className="bg-white p-4 rounded-lg w-[70%] shadow-lg border border-gray-300 relative ml-60">
+              <h2 className="text-xl font-semibold mb-4 text-center capitalize">
+                {modalType.replace("Transactions", " Transactions")}
+              </h2>
+              <button
+                className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+                onClick={() => {
+                  setModalType(null);
+                  setEditingId(null); // Reset edit mode
+                  setEditedTransaction({}); // Clear edited transaction
+                }}
+              >
+                ✖
+              </button>
+
+              {/* Transactions Table */}
+              <div
+                className={`overflow-x-auto ${transactions.length > 3 ? "max-h-60 overflow-y-auto" : ""
+                  }`}
+              >
+                <table className="min-w-full bg-white border border-gray-200 text-center">
+                  <thead>
+                    <tr className="bg-gray-100 border-b">
+                      <th className="p-2 border">Amount</th>
+                      <th className="p-2 border">Date</th>
+                      <th className="p-2 border">Type</th>
+                      <th className="p-2 border">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.map((transaction) => (
+                      <tr key={transaction.id} className="border-b">
+                        <td className="p-2 border">
+                          {editingId === transaction.id ? (
+                            <input
+                              type="number"
+                              className="border rounded p-1 w-full"
+                              value={editedTransaction.amount}
+                              onChange={(e) => handleChange(e, "amount")}
+                            />
+                          ) : (
+                            transaction.amount
+                          )}
+                        </td>
+                        <td className="p-2 border">
+                          {editingId === transaction.id ? (
+                            <input
+                              type="date"
+                              className="border rounded p-1 w-full"
+                              value={editedTransaction.date}
+                              onChange={(e) => handleChange(e, "date")}
+                            />
+                          ) : (
+                            new Date(transaction.date).toISOString().split("T")[0]
+                          )}
+                        </td>
+                        <td className="p-2 border">
+                          {editingId === transaction.id ? (
+                            <input
+                              type="text"
+                              className="border rounded p-1 w-full"
+                              value={editedTransaction.type}
+                              onChange={(e) => handleChange(e, "type")}
+                            />
+                          ) : (
+                            transaction.type
+                          )}
+                        </td>
+                        <td className="p-2 border gap-5">
+                          {editingId === transaction.id ? (
+                            <>
+                              <button
+                                onClick={saveEdit}
+                                className="p-2 text-green-500 hover:bg-green-100"
+                              >
+                                ✔
+                              </button>
+                              <button
+                                onClick={() => setEditingId(null)}
+                                className="p-2 text-red-500 hover:bg-red-100"
+                              >
+                                ✖
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleEdit(transaction)}
+                                className=" hover:bg-blue-600"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                className="px-2 py-1 hover:bg-red-600"
+                                onClick={() => {
+                                  if (
+                                    window.confirm(
+                                      "Are you sure you want to delete this?"
+                                    )
+                                  ) {
+                                    handleDelete(transaction.id); // ✅ Correct function name
+                                  }
+                                }}
+                              >
+                                🗑
+                              </button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+
+                    {/* Show Input Row if Adding New Transaction */}
+                    {newTransaction && (
+                      <tr className="border-b">
+                        <td className="p-2 border">
                           <input
                             type="number"
                             className="border rounded p-1 w-full"
-                            value={editedTransaction.amount}
-                            onChange={(e) => handleChange(e, "amount")}
+                            value={newTransaction.amount}
+                            onChange={(e) => handleNewChange(e, "amount")}
                           />
-                        ) : (
-                          transaction.amount
-                        )}
-                      </td>
-                      <td className="p-2 border">
-                        {editingId === transaction.id ? (
+                        </td>
+                        <td className="p-2 border">
                           <input
                             type="date"
                             className="border rounded p-1 w-full"
-                            value={editedTransaction.date}
-                            onChange={(e) => handleChange(e, "date")}
+                            value={newTransaction.date}
+                            onChange={(e) => handleNewChange(e, "date")}
                           />
-                        ) : (
-                          new Date(transaction.date).toISOString().split("T")[0]
-                        )}
-                      </td>
-                      <td className="p-2 border">
-                        {editingId === transaction.id ? (
+                        </td>
+                        <td className="p-2 border">
                           <input
                             type="text"
                             className="border rounded p-1 w-full"
-                            value={editedTransaction.type}
-                            onChange={(e) => handleChange(e, "type")}
+                            value={newTransaction.type}
+                            onChange={(e) => handleNewChange(e, "type")}
                           />
-                        ) : (
-                          transaction.type
-                        )}
-                      </td>
-                      <td className="p-2 border gap-5">
-                        {editingId === transaction.id ? (
-                          <>
-                            <button
-                              onClick={saveEdit}
-                              className="p-2 text-green-500 hover:bg-green-100"
-                            >
-                              ✔
-                            </button>
-                            <button
-                              onClick={() => setEditingId(null)}
-                              className="p-2 text-red-500 hover:bg-red-100"
-                            >
-                              ✖
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleEdit(transaction)}
-                              className=" hover:bg-blue-600"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              className="px-2 py-1 hover:bg-red-600"
-                              onClick={() => {
-                                if (
-                                  window.confirm(
-                                    "Are you sure you want to delete this?"
-                                  )
-                                ) {
-                                  handleDelete(transaction.id); // ✅ Correct function name
-                                }
-                              }}
-                            >
-                              🗑
-                            </button>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="p-2 border">
+                          <button
+                            className="p-2 text-green-500 hover:bg-green-100"
+                            onClick={saveNewTransaction}
+                          >
+                            ✔
+                          </button>
+                          <button
+                            className="p-2 text-red-500 hover:bg-red-100"
+                            onClick={() => setNewTransaction(null)}
+                          >
+                            ✖
+                          </button>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-                  {/* Show Input Row if Adding New Transaction */}
-                  {newTransaction && (
-                    <tr className="border-b">
-                      <td className="p-2 border">
-                        <input
-                          type="number"
-                          className="border rounded p-1 w-full"
-                          value={newTransaction.amount}
-                          onChange={(e) => handleNewChange(e, "amount")}
-                        />
-                      </td>
-                      <td className="p-2 border">
-                        <input
-                          type="date"
-                          className="border rounded p-1 w-full"
-                          value={newTransaction.date}
-                          onChange={(e) => handleNewChange(e, "date")}
-                        />
-                      </td>
-                      <td className="p-2 border">
-                        <input
-                          type="text"
-                          className="border rounded p-1 w-full"
-                          value={newTransaction.type}
-                          onChange={(e) => handleNewChange(e, "type")}
-                        />
-                      </td>
-                      <td className="p-2 border">
-                        <button
-                          className="p-2 text-green-500 hover:bg-green-100"
-                          onClick={saveNewTransaction}
-                        >
-                          ✔
-                        </button>
-                        <button
-                          className="p-2 text-red-500 hover:bg-red-100"
-                          onClick={() => setNewTransaction(null)}
-                        >
-                          ✖
-                        </button>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Add Button */}
-            <div className="flex justify-center mt-2">
-              {!newTransaction ? (
-                <button
-                  className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
-                  onClick={handleAddTransaction}
-                >
-                  +
-                </button>
-              ) : null}
+              {/* Add Button */}
+              <div className="flex justify-center mt-2">
+                {!newTransaction ? (
+                  <button
+                    className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                    onClick={handleAddTransaction}
+                  >
+                    +
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     </>
   );
 }

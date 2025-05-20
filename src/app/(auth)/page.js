@@ -168,13 +168,13 @@ export default function AuthForm() {
         console.log("🌍 Public IP Address:", data.ip);
         setUserIp(data.ip);
 
-        const allowedIp = "61.28.197.253";
+        const allowedIp = "127.0.0.1";
         if (data.ip === allowedIp) {
           console.log("✅ Access granted. IP matched.");
         } else {
           alert("❌ Access denied. Your IP address is not allowed to access this site.");
           console.warn("❌ Access denied. IP did not match.");
-          router.push("/denied");
+          // router.push("/denied");
         }
       } catch (err) {
         console.error("IP Fetch failed:", err);

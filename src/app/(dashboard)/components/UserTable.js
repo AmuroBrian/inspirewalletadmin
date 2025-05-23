@@ -28,6 +28,25 @@ const pathTitleMap = {
   "/notifications": "Notifications",
 };
 
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+  TextField,
+  Typography,
+  Button,
+  Box,
+} from "@mui/material";
+
+
+
+
+
 const UserTable = ({ adminId }) => {
   const pathname = usePathname(); // ✅ Correct: inside component
   const currentTitle = pathTitleMap[pathname] || "Admin Dashboard";
@@ -485,6 +504,7 @@ const UserTable = ({ adminId }) => {
         "timeDepositAmount",
         "usdtAmount",
         "walletAmount",
+        "agentCode",
       ];
 
       numericFields.forEach((field) => {
@@ -508,6 +528,7 @@ const UserTable = ({ adminId }) => {
         timeDepositAmount: Number(editingUser.timeDepositAmount) || 0,
         usdtAmount: Number(editingUser.usdtAmount) || 0,
         walletAmount: Number(editingUser.walletAmount) || 0,
+        agentCode: Number(editingUser.agentCode) || 0,
       });
 
       console.log("✅ User information updated successfully.");
@@ -724,164 +745,168 @@ const UserTable = ({ adminId }) => {
           </tbody>
         </table>
 
+            {/* Edit users field */}
         {isModalOpen && editingUser && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-50 ml-56 mt-16">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-auto">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">
-                Edit User
-              </h3>
+            <Dialog
+              open={isModalOpen}
+              onClose={closeModal}
+              maxWidth="md"
+              fullWidth
+              PaperProps={{ sx: { mt: 8, ml: { sm: 28 }, maxHeight: "80vh" } }}
+            >
+              <DialogTitle>Edit User</DialogTitle>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <span className=" text-gray-700 capitalize">First Name: </span>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={editingUser?.firstName || ""}
-                    onChange={(e) =>
-                      setEditingUser({
-                        ...editingUser,
-                        firstName: e.target.value,
-                      })
-                    }
-                    className="border rounded-md border-gray-300 w-40"
-                  />
-                ) : (
-                  <span className=" text-black">{editingUser.firstName}</span>
-                )}
-              </div>
+              <DialogContent dividers>
+                <Table size="small">
+                  <TableBody>
+                    {/* Basic Info */}
+                    <TableRow>
+                      <TableCell><strong>First Name</strong></TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <TextField
+                            name="firstName"
+                            value={editingUser.firstName || ""}
+                            onChange={(e) =>
+                              setEditingUser({ ...editingUser, firstName: e.target.value })
+                            }
+                            size="small"
+                            fullWidth
+                          />
+                        ) : (
+                          editingUser.firstName
+                        )}
+                      </TableCell>
+                    </TableRow>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <span className=" text-black">Last Name: </span>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={editingUser?.lastName || ""}
-                    onChange={(e) =>
-                      setEditingUser({
-                        ...editingUser,
-                        lastName: e.target.value,
-                      })
-                    }
-                    className="border rounded-md border-gray-300 w-40"
-                  />
-                ) : (
-                  <span className=" text-black">{editingUser.lastName}</span>
-                )}
-              </div>
+                    <TableRow>
+                      <TableCell><strong>Last Name</strong></TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <TextField
+                            name="lastName"
+                            value={editingUser.lastName || ""}
+                            onChange={(e) =>
+                              setEditingUser({ ...editingUser, lastName: e.target.value })
+                            }
+                            size="small"
+                            fullWidth
+                          />
+                        ) : (
+                          editingUser.lastName
+                        )}
+                      </TableCell>
+                    </TableRow>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-black">Email Address:</span>
-                <span className="text-black">
-                  {editingUser?.emailAddress || "N/A"}
-                </span>
-              </div>
+                    <TableRow>
+                      <TableCell><strong>Email Address</strong></TableCell>
+                      <TableCell>{editingUser.emailAddress || "N/A"}</TableCell>
+                    </TableRow>
 
-              <hr className="my-4" />
-              <p className="text-md font-semibold">Financial Details:</p>
-              {/* Numeric Fields */}
+                    {/* Divider */}
+                    <TableRow>
+                      <TableCell colSpan={2}>
+                        <Typography variant="subtitle1" mt={2}>
+                          Financial Details
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
 
-              <div className="grid grid-cols-1 gap-4">
-                {[
-                  { label: "Agent Wallet Amount", key: "agentWalletAmount" },
-                  { label: "Available Balance", key: "availBalanceAmount" },
-                  { label: "Stock Amount", key: "stockAmount" },
-                  { label: "Time Deposit", key: "timeDepositAmount" },
-                  { label: "USDT Amount", key: "usdtAmount" },
-                  { label: "Wallet Amount", key: "walletAmount" },
-                ].map(({ label, key }) => (
-                  <div key={key} className="grid grid-cols-2 items-center">
-                    {/* First column: Label */}
-                    <span className="text-sm font-medium text-black">
-                      {label}:
-                    </span>
+                    {/* Financial Fields */}
+                    {[
+                      { label: "Agent Wallet Amount", key: "agentWalletAmount" },
+                      { label: "Available Balance", key: "availBalanceAmount" },
+                      { label: "Stock Amount", key: "stockAmount" },
+                      { label: "Time Deposit", key: "timeDepositAmount" },
+                      { label: "USDT Amount", key: "usdtAmount" },
+                      { label: "Wallet Amount", key: "walletAmount" },
+                      { label: "Agent Number", key: "agentCode" },
+                    ].map(({ label, key }) => (
+                      <TableRow key={key}>
+                        <TableCell><strong>{label}</strong></TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <TextField
+                              type="number"
+                              name={key}
+                              value={editingUser[key] || ""}
+                              onChange={(e) =>
+                                setEditingUser({ ...editingUser, [key]: e.target.value })
+                              }
+                              size="small"
+                              fullWidth
+                            />
+                          ) : (
+                            editingUser[key]
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </DialogContent>
 
-                    {/* Second column: Value/Input */}
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        name={key}
-                        value={editingUser[key] || ""}
-                        onChange={(e) =>
-                          setEditingUser({
-                            ...editingUser,
-                            [key]: e.target.value,
-                          })
-                        }
-                        className="text-sm border rounded-md p-1 border-gray-300 w-full"
-                      />
-                    ) : (
-                      <span className="text-sm text-black -ml-2">
-                        {editingUser[key]}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex justify-end mt-4 space-x-3">
-                <button
-                  className={`px-4 py-2 rounded ${
-                    isEditing
-                      ? "bg-purple-300 cursor-not-allowed"
-                      : "bg-purple-600"
-                  } text-white`}
+              <DialogActions>
+                <Button
+                  color="secondary"
+                  variant="contained"
+                  disabled={isEditing}
                   onClick={() => {
                     setSelectedUser(editingUser);
-                    setIsDepositModalOpen(true); // You need to define this state and modal
+                    setIsDepositModalOpen(true);
                   }}
-                  disabled={isEditing}
                 >
                   Deposit
-                </button>
+                </Button>
 
-                <button
-                  className={`px-4 py-2 rounded ${
-                    isEditing ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500"
-                  } text-white`}
+                <Button
+                  color="info"
+                  variant="contained"
+                  disabled={isEditing}
                   onClick={() => {
-                    setSelectedUser(editingUser); // ✅ this is defined
+                    setSelectedUser(editingUser);
                     setIsWithdrawModalOpen(true);
                   }}
-                  disabled={isEditing}
                 >
                   Withdraw
-                </button>
+                </Button>
 
                 {isEditing ? (
-                  <button
-                    className="bg-green-500 text-white px-4 py-2 rounded"
+                  <Button
+                    color="success"
+                    variant="contained"
                     onClick={handleSubmit}
                   >
                     Submit
-                  </button>
+                  </Button>
                 ) : (
-                  <button
-                    className="bg-green-500 text-white px-4 py-2 rounded"
+                  <Button
+                    color="success"
+                    variant="contained"
                     onClick={() => setIsEditing(true)}
                   >
                     Edit
-                  </button>
+                  </Button>
                 )}
 
-                <button
-                  className="bg-gray-500 text-white px-4 py-2 rounded"
+                <Button
+                  color="inherit"
+                  variant="outlined"
                   onClick={() => {
                     if (isEditing) {
-                      setIsEditing(false); // Exit edit mode
+                      setIsEditing(false);
                     } else {
-                      setIsEditing(false); // Reset edit mode
-                      closeModal(); // Close the modal
+                      setIsEditing(false);
+                      closeModal();
                     }
                   }}
                 >
                   {isEditing ? "Cancel" : "Close"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+                </Button>
+              </DialogActions>
+            </Dialog>
+          )}
+        
 
         {isWithdrawModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

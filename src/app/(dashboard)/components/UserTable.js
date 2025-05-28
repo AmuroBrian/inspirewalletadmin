@@ -43,6 +43,10 @@ const UserTable = ({ adminId }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [remainingBalance, setRemainingBalance] = useState(null);
   const [withdrawError, setWithdrawError] = useState("");
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isDepositDetailsOpen, setIsDepositDetailsOpen] = useState(false);
+  const [depositType, setDepositType] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
   const [modalMessage, setModalMessage] = useState("");
   const [deletingUserId, setDeletingUserId] = useState(null);
   const [deletionStatus, setDeletionStatus] = useState("");
@@ -353,6 +357,59 @@ const UserTable = ({ adminId }) => {
     }
   };
 
+  const handleDepositTypeSelect = (type) => {
+    setDepositType(type);
+    setIsDepositModalOpen(false);
+    setIsDepositDetailsOpen(true);
+  };
+
+  const handleDepositConfirm = async () => {
+    const amountToDeposit = Number(depositAmount);
+
+    if (isNaN(amountToDeposit) || amountToDeposit <= 0) {
+      window.alert("Please enter a valid deposit amount greater than 0.");
+      return;
+    }
+
+    if (!selectedUser || !depositType) return;
+
+    try {
+      const userRef = doc(db, "users", selectedUser.id);
+      const docSnap = await getDoc(userRef);
+
+      if (!docSnap.exists()) {
+        console.error("User not found for deposit");
+        return;
+      }
+
+      const data = docSnap.data();
+      const fieldMap = {
+        agent: "agentWalletAmount",
+        balance: "availBalanceAmount",
+        timedeposit: "timeDepositAmount",
+      };
+
+      const selectedField = fieldMap[depositType];
+      const currentBalance = data[selectedField] || 0;
+      const newBalance = currentBalance + amountToDeposit;
+
+      await updateDoc(userRef, {
+        [selectedField]: newBalance,
+      });
+
+      console.log(`✅ Deposited ₱${amountToDeposit} to ${selectedField}`);
+
+      setDepositAmount("");
+      setDepositType("");
+      setIsDepositDetailsOpen(false);
+
+      const updatedUser = await fetchUserDetails(selectedUser.id);
+      setEditingUser(updatedUser);
+    } catch (error) {
+      console.error("❌ Error processing deposit:", error);
+    }
+  };
+
   const fetchUserDetails = async (userId) => {
     const userRef = doc(db, "users", userId);
     const docSnap = await getDoc(userRef);
@@ -593,15 +650,21 @@ const UserTable = ({ adminId }) => {
               <tr key={user.id} className="hover:bg-gray-50 text-center">
                 <td className="border p-2">{user.lastName}</td>
                 <td className="border p-2">{user.firstName}</td>
-                <td className="border p-2">{user.emailAddress || <span className="italic text-red-400">"Missing"</span>}</td>
                 <td className="border p-2">
-                  {user.createdAt?.toDate
-                    ? user.createdAt.toDate().toLocaleDateString("en-US", {
+                  {user.emailAddress || (
+                    <span className="italic text-red-400">"Missing"</span>
+                  )}
+                </td>
+                <td className="border p-2">
+                  {user.createdAt?.toDate ? (
+                    user.createdAt.toDate().toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
                     })
-                    : <span className="italic text-red-400">N/A</span>}
+                  ) : (
+                    <span className="italic text-red-400">N/A</span>
+                  )}
                 </td>
 
                 <td className="border p-2">
@@ -663,8 +726,9 @@ const UserTable = ({ adminId }) => {
         {isModalOpen && editingUser && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-50 ml-56 mt-16">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-auto">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Edit User</h3>
-
+              <h3 className="text-xl font-bold text-gray-800 mb-4">
+                Edit User
+              </h3>
               <div className="flex flex-wrap items-center gap-2">
                 <span className=" text-gray-700 capitalize">First Name: </span>
                 {isEditing ? (
@@ -693,7 +757,10 @@ const UserTable = ({ adminId }) => {
                     name="lastName"
                     value={editingUser?.lastName || ""}
                     onChange={(e) =>
-                      setEditingUser({ ...editingUser, lastName: e.target.value })
+                      setEditingUser({
+                        ...editingUser,
+                        lastName: e.target.value,
+                      })
                     }
                     className="border rounded-md border-gray-300 w-40"
                   />
@@ -753,8 +820,40 @@ const UserTable = ({ adminId }) => {
 
               <div className="flex justify-end mt-4 space-x-3">
                 <button
-                  className={`px-4 py-2 rounded ${isEditing ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500"
-                    } text-white`}
+                  className={`px-4 py-2 rounded ${
+                    isEditing
+                      ? "bg-purple-300 cursor-not-allowed"
+                      : "bg-purple-600"
+                  } text-white`}
+                  onClick={() => {
+                    setSelectedUser(editingUser);
+                    setIsDepositModalOpen(true); // You need to define this state and modal
+                  }}
+                  disabled={isEditing}
+                >
+                  Deposit
+                </button>
+
+                {isEditing ? (
+                  <button
+                    className="bg-green-500 text-white px-4 py-2 rounded"
+                    onClick={handleSubmit}
+                  >
+                    Submit
+                  </button>
+                ) : (
+                  <button
+                    className="bg-green-500 text-white px-4 py-2 rounded"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    Edit
+                  </button>
+                )}
+
+                <button
+                  className={`px-4 py-2 rounded ${
+                    isEditing ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500"
+                  } text-white`}
                   onClick={() => {
                     setSelectedUser(editingUser); // ✅ this is defined
                     setIsWithdrawModalOpen(true);
@@ -886,6 +985,83 @@ const UserTable = ({ adminId }) => {
                 <button
                   className="bg-gray-500 text-white px-4 py-2 rounded"
                   onClick={handleCancel}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isDepositModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
+              <h2 className="text-lg font-semibold mb-4">
+                Select where to deposit funds
+              </h2>
+              <div className="flex flex-col gap-3">
+                <button
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                  onClick={() => handleDepositTypeSelect("agent")}
+                >
+                  Agent Wallet
+                </button>
+                <button
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                  onClick={() => handleDepositTypeSelect("balance")}
+                >
+                  Available Balance
+                </button>
+                <button
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
+                  onClick={() => handleDepositTypeSelect("timedeposit")}
+                >
+                  Time Deposit
+                </button>
+              </div>
+              <button
+                className="mt-4 text-sm text-gray-500 hover:text-gray-700 underline"
+                onClick={() => setIsDepositModalOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isDepositDetailsOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <h2 className="text-xl font-semibold mb-4 capitalize text-left">
+                {depositType} deposit
+              </h2>
+
+              <input
+                type="number"
+                min="0"
+                placeholder="Enter deposit amount"
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-6"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
+              />
+
+              <div className="flex justify-center gap-4">
+                <button
+                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                  onClick={handleDepositConfirm}
+                  disabled={depositAmount < 0 || depositAmount === ""}
+                >
+                  Confirm
+                </button>
+                <button
+                  className="bg-yellow-500 text-white px-4 py-2 rounded"
+                  onClick={() => setDepositAmount("")}
+                >
+                  Clear
+                </button>
+                <button
+                  className="bg-gray-500 text-white px-4 py-2 rounded"
+                  onClick={() => setIsDepositDetailsOpen(false)}
                 >
                   Cancel
                 </button>

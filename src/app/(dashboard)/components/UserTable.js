@@ -337,10 +337,9 @@ const UserTable = ({ adminId }) => {
       });
 
       console.log(
-        `✅ Updated ${
-          selectedWithdrawType === "agent"
-            ? "agentWalletAmount"
-            : "availBalanceAmount"
+        `✅ Updated ${selectedWithdrawType === "agent"
+          ? "agentWalletAmount"
+          : "availBalanceAmount"
         } to ₱${newBalance}`
       );
 
@@ -567,8 +566,8 @@ const UserTable = ({ adminId }) => {
 
   const filteredUsers = users.filter(
     (user) =>
-      user.firstName?.toLowerCase().includes(search.toLowerCase()) ||
-      user.lastName?.toLowerCase().includes(search.toLowerCase())
+      (user?.firstName?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      (user?.lastName?.toLowerCase() || '').includes(search.toLowerCase())
   );
 
   // **Loading Screen**
@@ -621,7 +620,7 @@ const UserTable = ({ adminId }) => {
               text-[#1F2937]
             "
       >
-        Welcome to {currentTitle}
+        Welcome to  {currentTitle}
       </h1>
 
       <div className="overflow-x-auto mt-20">
@@ -730,7 +729,6 @@ const UserTable = ({ adminId }) => {
               <h3 className="text-xl font-bold text-gray-800 mb-4">
                 Edit User
               </h3>
-
               <div className="flex flex-wrap items-center gap-2">
                 <span className=" text-gray-700 capitalize">First Name: </span>
                 {isEditing ? (
@@ -835,6 +833,22 @@ const UserTable = ({ adminId }) => {
                 >
                   Deposit
                 </button>
+
+                {isEditing ? (
+                  <button
+                    className="bg-green-500 text-white px-4 py-2 rounded"
+                    onClick={handleSubmit}
+                  >
+                    Submit
+                  </button>
+                ) : (
+                  <button
+                    className="bg-green-500 text-white px-4 py-2 rounded"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    Edit
+                  </button>
+                )}
 
                 <button
                   className={`px-4 py-2 rounded ${
